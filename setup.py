@@ -16,7 +16,8 @@ setup(
     description="Utility for managing Signal Sciences sites",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/turnercode/iso-sigsci-mgmttools/sigsci_site_manager",
+    url=("https://github.com/turnercode/"
+         "iso-sigsci-mgmttools/sigsci_site_manager"),
     packages=['sigsci_site_manager'],
     setup_requires=[
         'pytest-runner'

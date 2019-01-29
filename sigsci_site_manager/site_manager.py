@@ -1,17 +1,12 @@
 import argparse
 
-from pysigsci import sigsciapi
-
-
-def init_api(corp, username, token):
-    api = sigsciapi.SigSciApi(email=username, api_token=token)
-    api.corp = corp
-    return api
+from api import init_api
+from backup import backup
 
 
 def list_sites(args):
     print('Listing sites for "%s":' % args.corp)
-    api = init_api(args.corp, args.username, args.token)
+    api = init_api(args.username, args.token, args.corp)
     resp = api.get_corp_sites()
     sites = [site['name'] for site in resp['data']]
     sites.sort()
@@ -21,18 +16,16 @@ def list_sites(args):
 
 
 def deploy(args):
-    print('Deploying site "%s" from file "%s"' %
-          (args.site_name, args.file_name))
-
-
-def backup(args):
-    print('Backing up site "%s" to file "%s"' %
-          (args.site_name, args.file_name))
+    print('Not implemented')
 
 
 def clone(args):
-    print('Cloning site "%s" to site "%s"' %
-          (args.src_site, args.dst_site))
+    print('Not implemented')
+
+
+def do_backup(args):
+    api = init_api(args.username, args.token, args.corp)
+    backup(api, args.site_name, args.file_name)
 
 
 def get_args():
@@ -69,7 +62,7 @@ def get_args():
     backup_parser.add_argument('--out', '-o', metavar='FILENAME',
                                required=True, dest='file_name',
                                help='File to save backup to')
-    backup_parser.set_defaults(func=backup)
+    backup_parser.set_defaults(func=do_backup)
 
     # Clone command arguments
     clone_parser = subparsers.add_parser(
