@@ -2,11 +2,20 @@ import json
 
 
 def filter_data(data, keys):
-    ret = []
-    for item in data:
-        # Only save the data required by the create API
-        ret.append({k: item[k] for k in keys})
+    if isinstance(data, (list, tuple)):
+        ret = []
+        for item in data:
+            # Only save the data required by the create API
+            ret.append({k: item[k] for k in keys})
+    else:
+        ret = {k: data[k] for k in keys}
     return ret
+
+
+def get_site(api):
+    keys = ['agentLevel', 'blockDurationSeconds', 'blockHTTPCode']
+    data = api.get_corp_site(api.site)
+    return filter_data(data, keys)
 
 
 def get_rule_lists(api):
@@ -47,6 +56,7 @@ def backup(api, site_name, file_name):
     api.site = site_name
 
     data = {}
+    data['site'] = get_site(api)
     data['rule_lists'] = get_rule_lists(api)
     data['request_rules'] = get_request_rules(api)
     data['custom_signals'] = get_custom_signals(api)
