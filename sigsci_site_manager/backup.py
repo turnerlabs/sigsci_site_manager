@@ -32,7 +32,7 @@ def get_request_rules(api):
 
 
 def get_custom_signals(api):
-    keys = ['longName', 'description']
+    keys = ['tagName', 'shortName', 'description']
     data = api.get_custom_signals()
     return filter_data(data['data'], keys)
 

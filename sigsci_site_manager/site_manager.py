@@ -2,6 +2,7 @@ import argparse
 
 from api import init_api
 from backup import backup
+from deploy import deploy
 
 
 def list_sites(args):
@@ -15,8 +16,9 @@ def list_sites(args):
     print('(%d sites)' % len(sites))
 
 
-def deploy(args):
-    print('Not implemented')
+def do_deploy(args):
+    api = init_api(args.username, args.token, args.corp)
+    deploy(api, args.site_name, args.file_name)
 
 
 def clone(args):
@@ -52,7 +54,7 @@ def get_args():
     deploy_parser.add_argument('--file', '-f', metavar='FILENAME',
                                required=True, dest='file_name',
                                help='Name of site file')
-    deploy_parser.set_defaults(func=deploy)
+    deploy_parser.set_defaults(func=do_deploy)
 
     # Backup command arguments
     backup_parser = subparsers.add_parser('backup',
