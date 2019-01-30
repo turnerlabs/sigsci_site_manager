@@ -76,6 +76,14 @@ def add_site_members(api, data):
         api.update_site_member(item['user']['email'], role)
 
 
+def generate_advanced_rules_request(api, data):
+    print('Email support@signalsciences.com with the following...\n')
+    print('Please copy the following advanced rules to %s/%s:' %
+          (api.corp, api.site))
+    for item in data:
+        print('    %s (ID %s)' % (item['shortName'], item['id']))
+
+
 def deploy(api, site_name, file_name):
     with open(file_name, 'r') as f:
         data = json.loads(f.read())
@@ -107,3 +115,5 @@ def deploy(api, site_name, file_name):
     update_templated_rules(api, data['templated_rules'])
     create_custom_alerts(api, data['custom_alerts'])
     add_site_members(api, data['site_members'])
+
+    generate_advanced_rules_request(api, data['advanced_rules'])
