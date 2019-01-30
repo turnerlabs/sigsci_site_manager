@@ -101,7 +101,7 @@ def backups(api, site_name):
 
 
 def backup(api, site_name, file_name):
-    print('Backing up site "%s" to file "%s"...' %
+    print("Backing up site '%s' to file '%s'..." %
           (site_name, file_name))
 
     data = backups(api, site_name)

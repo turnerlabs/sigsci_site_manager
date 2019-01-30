@@ -57,7 +57,7 @@ def update_templated_rules(api, data):
 def create_custom_alerts(api, data):
     print('Creating custom alerts...')
     for item in data:
-        if item['action'] is 'siteMetricInfo':
+        if item['action'] == 'siteMetricInfo':
             # Default agent alerts are added at site creation
             continue
         print('  %s' % item['longName'])
@@ -67,7 +67,7 @@ def create_custom_alerts(api, data):
 def add_site_members(api, data):
     print('Adding users...')
     for item in data:
-        if item['user']['role'] is 'owner':
+        if item['role'] == 'owner':
             # Owners are auto-added at site creation
             continue
         print('  %s' % item['user']['email'])
@@ -76,7 +76,7 @@ def add_site_members(api, data):
 
 
 def generate_advanced_rules_request(api, data):
-    print('Email support@signalsciences.com with the following...\n')
+    print('\n\nEmail support@signalsciences.com with the following...\n')
     print('Please copy the following advanced rules to %s/%s:' %
           (api.corp, api.site))
     for item in data:
@@ -116,6 +116,9 @@ def deploys(api, site_name, data):
 
 
 def deploy(api, site_name, file_name):
+    print("Deploying to new site '%s' from file '%s'..." %
+          (site_name, file_name))
+
     with open(file_name, 'r') as f:
         data = json.loads(f.read())
 
