@@ -1,5 +1,5 @@
-from backup import backups
-from deploy import deploys
+from sigsci_site_manager.backup import backups
+from sigsci_site_manager.deploy import deploys
 
 
 def clone(api, src_site, dst_site):

@@ -1,9 +1,9 @@
 import argparse
 
-from api import init_api
-from backup import backup
-from clone import clone
-from deploy import deploy
+from sigsci_site_manager.api import init_api
+from sigsci_site_manager.backup import backup
+from sigsci_site_manager.clone import clone
+from sigsci_site_manager.deploy import deploy
 
 
 def do_list(args):
