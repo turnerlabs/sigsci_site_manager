@@ -32,6 +32,13 @@ def create_request_rules(api, data):
         api.add_request_rules(item)
 
 
+def create_signal_rules(api, data):
+    print('Creating signal rules...')
+    for item in data:
+        print('  %s' % item['reason'])
+        api.add_signal_rules(item)
+
+
 def create_custom_signals(api, data):
     print('Creating custom signals...')
     import pdb
@@ -89,5 +96,6 @@ def deploy(api, site_name, file_name):
     create_rule_lists(api, data['rule_lists'])
     create_custom_signals(api, data['custom_signals'])
     create_request_rules(api, data['request_rules'])
+    create_signal_rules(api, data['signal_rules'])
     create_custom_alerts(api, data['custom_alerts'])
     add_site_members(api, data['site_members'])

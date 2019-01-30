@@ -37,6 +37,12 @@ def get_custom_signals(api):
     return filter_data(data['data'], keys)
 
 
+def get_signal_rules(api):
+    keys = ['enabled', 'signal', 'groupOperator', 'conditions', 'reason']
+    data = api.get_signal_rules()
+    return filter_data(data['data'], keys)
+
+
 def get_custom_alerts(api):
     keys = ['tagName', 'longName', 'interval',
             'threshold', 'enabled', 'action']
@@ -60,7 +66,7 @@ def backup(api, site_name, file_name):
     data['rule_lists'] = get_rule_lists(api)
     data['request_rules'] = get_request_rules(api)
     data['custom_signals'] = get_custom_signals(api)
-    # data['signal_rules'] = get_signal_rules()
+    data['signal_rules'] = get_signal_rules(api)
     # data['advanced_rules'] = get_advanced_rules()
     # data['templated_rules'] = get_templated_rules(api)
     data['custom_alerts'] = get_custom_alerts(api)
