@@ -43,6 +43,27 @@ def get_signal_rules(api):
     return filter_data(data['data'], keys)
 
 
+def get_templated_rules(api):
+    detection_keys = ['name', 'fields', 'enabled']
+    alert_keys = ['longName', 'interval', 'threshold',
+                  'skipNotifications', 'enabled', 'action']
+    data = api.get_templated_rules()
+    ret = {}
+    for rule in data['data']:
+        if not rule['detections']:
+            # Skip empty rules
+            continue
+
+        # Reformat the retrieved data into the structure needed for adding the
+        # templated rule to a clean site.
+        ret[rule['name']] = {'detectionAdds': [], 'alertAdds': []}
+        ret[rule['name']]['detectionAdds'] += filter_data(
+            rule['detections'], detection_keys)
+        ret[rule['name']]['alertAdds'] += filter_data(
+            rule['alerts'], alert_keys)
+    return ret
+
+
 def get_custom_alerts(api):
     keys = ['tagName', 'longName', 'interval',
             'threshold', 'enabled', 'action']
@@ -67,10 +88,10 @@ def backup(api, site_name, file_name):
     data['request_rules'] = get_request_rules(api)
     data['custom_signals'] = get_custom_signals(api)
     data['signal_rules'] = get_signal_rules(api)
-    # data['advanced_rules'] = get_advanced_rules()
-    # data['templated_rules'] = get_templated_rules(api)
+    data['templated_rules'] = get_templated_rules(api)
     data['custom_alerts'] = get_custom_alerts(api)
     data['site_members'] = get_site_members(api)
+    # data['advanced_rules'] = get_advanced_rules()
 
     with open(file_name, 'w') as f:
         f.write(json.dumps(data))

@@ -25,6 +25,15 @@ def create_rule_lists(api, data):
         api.add_rule_lists(item)
 
 
+def create_custom_signals(api, data):
+    print('Creating custom signals...')
+    import pdb
+    pdb.set_trace()
+    for item in data:
+        print('  %s' % item['shortName'])
+        api.add_custom_signals(item)
+
+
 def create_request_rules(api, data):
     print('Creating request rules...')
     for item in data:
@@ -39,13 +48,11 @@ def create_signal_rules(api, data):
         api.add_signal_rules(item)
 
 
-def create_custom_signals(api, data):
-    print('Creating custom signals...')
-    import pdb
-    pdb.set_trace()
+def update_templated_rules(api, data):
+    print('Updating templated rules...')
     for item in data:
-        print('  %s' % item['shortName'])
-        api.add_custom_signals(item)
+        print('  %s' % item)
+        api.add_templated_rules(item, data[item])
 
 
 def create_custom_alerts(api, data):
@@ -97,5 +104,6 @@ def deploy(api, site_name, file_name):
     create_custom_signals(api, data['custom_signals'])
     create_request_rules(api, data['request_rules'])
     create_signal_rules(api, data['signal_rules'])
+    update_templated_rules(api, data['templated_rules'])
     create_custom_alerts(api, data['custom_alerts'])
     add_site_members(api, data['site_members'])
