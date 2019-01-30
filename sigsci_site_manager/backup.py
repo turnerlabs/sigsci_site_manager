@@ -87,6 +87,7 @@ def backups(api, site_name):
     api.site = site_name
 
     data = {}
+    data['source'] = {'corp': api.corp, 'site': api.site}
     data['site'] = get_site(api)
     data['rule_lists'] = get_rule_lists(api)
     data['request_rules'] = get_request_rules(api)
