@@ -16,6 +16,7 @@ def create_site(api, site_name, data):
     if 'message' in resp:
         print('Error: %s' % resp['message'])
         return False
+    return True
 
 
 def create_rule_lists(api, data):
@@ -27,8 +28,6 @@ def create_rule_lists(api, data):
 
 def create_custom_signals(api, data):
     print('Creating custom signals...')
-    import pdb
-    pdb.set_trace()
     for item in data:
         print('  %s' % item['shortName'])
         api.add_custom_signals(item)
@@ -84,10 +83,7 @@ def generate_advanced_rules_request(api, data):
         print('    %s (ID %s)' % (item['shortName'], item['id']))
 
 
-def deploy(api, site_name, file_name):
-    with open(file_name, 'r') as f:
-        data = json.loads(f.read())
-
+def deploys(api, site_name, data):
     # Check that the site doesn't already exist
     try:
         api.get_corp_site(site_name)
@@ -117,3 +113,10 @@ def deploy(api, site_name, file_name):
     add_site_members(api, data['site_members'])
 
     generate_advanced_rules_request(api, data['advanced_rules'])
+
+
+def deploy(api, site_name, file_name):
+    with open(file_name, 'r') as f:
+        data = json.loads(f.read())
+
+    deploys(api, site_name, data)

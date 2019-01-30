@@ -83,9 +83,7 @@ def get_advanced_rules(api):
     return filter_data(data['data'], keys)
 
 
-def backup(api, site_name, file_name):
-    print('Backing up site "%s" to file "%s"...' %
-          (site_name, file_name))
+def backups(api, site_name):
     api.site = site_name
 
     data = {}
@@ -98,6 +96,15 @@ def backup(api, site_name, file_name):
     data['custom_alerts'] = get_custom_alerts(api)
     data['site_members'] = get_site_members(api)
     data['advanced_rules'] = get_advanced_rules(api)
+
+    return data
+
+
+def backup(api, site_name, file_name):
+    print('Backing up site "%s" to file "%s"...' %
+          (site_name, file_name))
+
+    data = backups(api, site_name)
 
     with open(file_name, 'w') as f:
         f.write(json.dumps(data))

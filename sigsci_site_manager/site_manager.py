@@ -2,10 +2,11 @@ import argparse
 
 from api import init_api
 from backup import backup
+from clone import clone
 from deploy import deploy
 
 
-def list_sites(args):
+def do_list(args):
     print('Listing sites for "%s":' % args.corp)
     api = init_api(args.username, args.token, args.corp)
     resp = api.get_corp_sites()
@@ -21,8 +22,9 @@ def do_deploy(args):
     deploy(api, args.site_name, args.file_name)
 
 
-def clone(args):
-    print('Not implemented')
+def do_clone(args):
+    api = init_api(args.username, args.token, args.corp)
+    clone(api, args.src_site, args.dst_site)
 
 
 def do_backup(args):
@@ -44,32 +46,32 @@ def get_args():
 
     # List command arguments
     list_parser = subparsers.add_parser('list', help='List sites')
-    list_parser.set_defaults(func=list_sites)
+    list_parser.set_defaults(func=do_list)
 
     # Deploy command arguments
     deploy_parser = subparsers.add_parser(
         'deploy', help='Deploy a new site from a file')
+    deploy_parser.set_defaults(func=do_deploy)
     deploy_parser.add_argument('--name', '-n', metavar='NAME', required=True,
                                dest='site_name', help='Site name')
     deploy_parser.add_argument('--file', '-f', metavar='FILENAME',
                                required=True, dest='file_name',
                                help='Name of site file')
-    deploy_parser.set_defaults(func=do_deploy)
 
     # Backup command arguments
     backup_parser = subparsers.add_parser('backup',
                                           help='Backup a site to a file')
+    backup_parser.set_defaults(func=do_backup)
     backup_parser.add_argument('--name', '-n', metavar='NAME', required=True,
                                dest='site_name', help='Site name')
     backup_parser.add_argument('--out', '-o', metavar='FILENAME',
                                required=True, dest='file_name',
                                help='File to save backup to')
-    backup_parser.set_defaults(func=do_backup)
 
     # Clone command arguments
     clone_parser = subparsers.add_parser(
         'clone', help='Clone an existing site to a new site')
-    clone_parser.set_defaults(func=clone)
+    clone_parser.set_defaults(func=do_clone)
     clone_parser.add_argument('--src', '-s', metavar='SITE', dest='src_site',
                               required=True, help='Site to clone from')
     clone_parser.add_argument('--dest', '-d', metavar='SITE', dest='dst_site',
