@@ -38,7 +38,8 @@ def get_args():
     # Top-level arguments
     parser = argparse.ArgumentParser(
         description='Signal Sciences site management')
-    subparsers = parser.add_subparsers(title='Commands')
+    subparsers = parser.add_subparsers(title='Commands', dest='command')
+    subparsers.required = True
     parser.add_argument('--corp', '-c', metavar='CORP', dest='corp',
                         help='Signal Sciences corp name. If omitted will try '
                              'to use value in $SIGSCI_CORP.')
