@@ -12,7 +12,8 @@ def do_list(args):
     print('Listing sites for "%s":' % args.corp)
     api = init_api(args.username, args.password, args.token, args.corp)
     resp = api.get_corp_sites()
-    sites = [site['name'] for site in resp['data']]
+    sites = ['%s [%s]' % (site['displayName'], site['name'])
+             for site in resp['data']]
     sites.sort()
     for name in sites:
         print('  %s' % name)
