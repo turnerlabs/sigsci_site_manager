@@ -118,8 +118,8 @@ def main():
 
     # If username/password|token/corp were not specified via args see if
     # there are environment variables set
-    if args.username is None and 'SIGSCI_USERNAME' in os.environ:
-        args.username = os.environ['SIGSCI_USERNAME']
+    if args.username is None and 'SIGSCI_EMAIL' in os.environ:
+        args.username = os.environ['SIGSCI_EMAIL']
     if args.password is None and 'SIGSCI_PASSWORD' in os.environ:
         args.password = os.environ['SIGSCI_PASSWORD']
     if args.token is None and 'SIGSCI_TOKEN' in os.environ:
