@@ -1,5 +1,6 @@
 import argparse
 from getpass import getpass
+import os
 
 from sigsci_site_manager.api import init_api
 from sigsci_site_manager.backup import backup
@@ -38,17 +39,22 @@ def get_args():
     parser = argparse.ArgumentParser(
         description='Signal Sciences site management')
     subparsers = parser.add_subparsers(title='Commands')
-    parser.add_argument('--corp', '-c', metavar='CORP', required=True,
-                        dest='corp', help='Signal Sciences corp name')
-    parser.add_argument('--user', '-u', metavar='USERNAME', required=True,
-                        dest='username', help='Signal Sciences username')
+    parser.add_argument('--corp', '-c', metavar='CORP', dest='corp',
+                        help='Signal Sciences corp name. If omitted will try '
+                             'to use value in $SIGSCI_CORP.')
+    parser.add_argument('--user', '-u', metavar='USERNAME', nargs='?',
+                        dest='username', const='',
+                        help='Signal Sciences username. If omitted will try '
+                             'to use value in $SIGSCI_EMAIL.')
     pw_group = parser.add_mutually_exclusive_group()
     pw_group.add_argument('--password', '-p', metavar='PASSWORD', nargs='?',
                           dest='password', const='',
-                          help='Signal Sciences password')
+                          help='Signal Sciences password. If omitted will try '
+                               'to use value in $SIGSCI_PASSWORD')
     pw_group.add_argument('--token', '-t', metavar='APITOKEN', nargs='?',
                           dest='token', const='',
-                          help='Signal Sciences API token')
+                          help='Signal Sciences API token. If omitted will '
+                               'try to use value in $SIGSCI_TOKEN')
 
     # List command arguments
     list_parser = subparsers.add_parser('list', help='List sites')
@@ -96,10 +102,40 @@ def get_args():
 
 def main():
     args = get_args()
+
+    # Username arg was passed but without a value so get it from stdin
+    if args.username == '':
+        args.username = getpass('Username: ')
+
+    # Password/Token args were passed but without values
+    # so get those values from stdin
     if args.password == '':
         args.password = getpass()
         args.token = None
     elif args.token == '':
         args.token = getpass('API Token: ')
         args.password = None
+
+    # If username/password|token/corp were not specified via args see if
+    # there are environment variables set
+    if args.username is None and 'SIGSCI_USERNAME' in os.environ:
+        args.username = os.environ['SIGSCI_USERNAME']
+    if args.password is None and 'SIGSCI_PASSWORD' in os.environ:
+        args.password = os.environ['SIGSCI_PASSWORD']
+    if args.token is None and 'SIGSCI_TOKEN' in os.environ:
+        args.token = os.environ['SIGSCI_TOKEN']
+    if args.corp is None and 'SIGSCI_CORP' in os.environ:
+        args.corp = os.environ['SIGSCI_CORP']
+
+    # Validate corp/username/password|token are present
+    if args.corp is None:
+        print('error: corp name is required')
+        return 1
+    if args.username is None:
+        print('error: username is required')
+        return 1
+    if args.password is None and args.token is None:
+        print('error: password or API token is required')
+        return 1
+
     args.func(args)
