@@ -19,12 +19,12 @@ def do_list(args):
 
 def do_deploy(args):
     api = init_api(args.username, args.token, args.corp)
-    deploy(api, args.site_name, args.file_name)
+    deploy(api, args.site_name, args.file_name, args.display_name)
 
 
 def do_clone(args):
     api = init_api(args.username, args.token, args.corp)
-    clone(api, args.src_site, args.dst_site)
+    clone(api, args.src_site, args.dst_site, args.display_name)
 
 
 def do_backup(args):
@@ -53,7 +53,11 @@ def get_args():
         'deploy', help='Deploy a new site from a file')
     deploy_parser.set_defaults(func=do_deploy)
     deploy_parser.add_argument('--name', '-n', metavar='NAME', required=True,
-                               dest='site_name', help='Site name')
+                               dest='site_name',
+                               help='Identifying name of the site')
+    deploy_parser.add_argument('--display-name', '-N',
+                               metavar='"Display Name"', dest='display_name',
+                               help='Display name of the site')
     deploy_parser.add_argument('--file', '-f', metavar='FILENAME',
                                required=True, dest='file_name',
                                help='Name of site file')
@@ -76,6 +80,9 @@ def get_args():
                               required=True, help='Site to clone from')
     clone_parser.add_argument('--dest', '-d', metavar='SITE', dest='dst_site',
                               required=True, help='Site to clone to')
+    clone_parser.add_argument('--display-name', '-N',
+                              metavar='"Display Name"', dest='display_name',
+                              help='Display name of the new site')
 
     # Return the parsed arguments
     return parser.parse_args()
@@ -84,7 +91,3 @@ def get_args():
 def main():
     args = get_args()
     args.func(args)
-
-
-if __name__ == '__main__':
-    main()

@@ -1,13 +1,15 @@
 import json
 
 
-def create_site(api, site_name, data):
+def create_site(api, site_name, data, display_name):
     # Create new site
     # Not currently supported by pysigsci
     # POST /corps/{corpName}/sites
-    print('Creating site...')
+    if not display_name:
+        display_name = site_name
+    print("Creating site '%s' (%s)..." % (display_name, site_name))
     data['name'] = site_name
-    data['displayName'] = site_name
+    data['displayName'] = display_name
     resp = api._make_request(
         endpoint="{}/{}/sites".format(api.ep_corps, api.corp),
         json=data,
@@ -83,7 +85,7 @@ def generate_advanced_rules_request(api, source, data):
         print('    %s (ID %s)' % (item['shortName'], item['id']))
 
 
-def deploys(api, site_name, data):
+def deploys(api, site_name, data, display_name):
     # Check that the site doesn't already exist
     try:
         api.get_corp_site(site_name)
@@ -99,7 +101,7 @@ def deploys(api, site_name, data):
         print("Site '%s' already exists" % site_name)
         # return
 
-    if not create_site(api, site_name, data['site']):
+    if not create_site(api, site_name, data['site'], display_name):
         return
 
     api.site = site_name
@@ -116,11 +118,11 @@ def deploys(api, site_name, data):
         api, data['source'], data['advanced_rules'])
 
 
-def deploy(api, site_name, file_name):
+def deploy(api, site_name, file_name, display_name):
     print("Deploying to new site '%s' from file '%s'..." %
           (site_name, file_name))
 
     with open(file_name, 'r') as f:
         data = json.loads(f.read())
 
-    deploys(api, site_name, data)
+    deploys(api, site_name, data, display_name)
