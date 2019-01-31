@@ -23,7 +23,7 @@ setup(
         'pytest-runner'
     ],
     install_requires=[
-        'pysigsci'
+        'pysigsci>=2.0.3'
     ],
     tests_require=[
         'pytest'
