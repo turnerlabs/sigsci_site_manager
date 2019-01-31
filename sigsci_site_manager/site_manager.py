@@ -54,7 +54,7 @@ def get_args():
     pw_group.add_argument('--token', '-t', metavar='APITOKEN', nargs='?',
                           dest='token', const='',
                           help='Signal Sciences API token. If omitted will '
-                               'try to use value in $SIGSCI_TOKEN')
+                               'try to use value in $SIGSCI_API_TOKEN')
 
     # List command arguments
     list_parser = subparsers.add_parser('list', help='List sites')
@@ -122,8 +122,8 @@ def main():
         args.username = os.environ['SIGSCI_EMAIL']
     if args.password is None and 'SIGSCI_PASSWORD' in os.environ:
         args.password = os.environ['SIGSCI_PASSWORD']
-    if args.token is None and 'SIGSCI_TOKEN' in os.environ:
-        args.token = os.environ['SIGSCI_TOKEN']
+    if args.token is None and 'SIGSCI_API_TOKEN' in os.environ:
+        args.token = os.environ['SIGSCI_API_TOKEN']
     if args.corp is None and 'SIGSCI_CORP' in os.environ:
         args.corp = os.environ['SIGSCI_CORP']
 
