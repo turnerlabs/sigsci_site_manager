@@ -1,4 +1,5 @@
 import argparse
+from getpass import getpass
 
 from sigsci_site_manager.api import init_api
 from sigsci_site_manager.backup import backup
@@ -8,7 +9,7 @@ from sigsci_site_manager.deploy import deploy
 
 def do_list(args):
     print('Listing sites for "%s":' % args.corp)
-    api = init_api(args.username, args.token, args.corp)
+    api = init_api(args.username, args.password, args.token, args.corp)
     resp = api.get_corp_sites()
     sites = [site['name'] for site in resp['data']]
     sites.sort()
@@ -18,17 +19,17 @@ def do_list(args):
 
 
 def do_deploy(args):
-    api = init_api(args.username, args.token, args.corp)
+    api = init_api(args.username, args.password, args.token, args.corp)
     deploy(api, args.site_name, args.file_name, args.display_name)
 
 
 def do_clone(args):
-    api = init_api(args.username, args.token, args.corp)
+    api = init_api(args.username, args.password, args.token, args.corp)
     clone(api, args.src_site, args.dst_site, args.display_name)
 
 
 def do_backup(args):
-    api = init_api(args.username, args.token, args.corp)
+    api = init_api(args.username, args.password, args.token, args.corp)
     backup(api, args.site_name, args.file_name)
 
 
@@ -41,8 +42,13 @@ def get_args():
                         dest='corp', help='Signal Sciences corp name')
     parser.add_argument('--user', '-u', metavar='USERNAME', required=True,
                         dest='username', help='Signal Sciences username')
-    parser.add_argument('--token', '-t', metavar='APITOKEN', required=True,
-                        dest='token', help='Signal Sciences API token')
+    pw_group = parser.add_mutually_exclusive_group()
+    pw_group.add_argument('--password', '-p', metavar='PASSWORD', nargs='?',
+                          dest='password', const='',
+                          help='Signal Sciences password')
+    pw_group.add_argument('--token', '-t', metavar='APITOKEN', nargs='?',
+                          dest='token', const='',
+                          help='Signal Sciences API token')
 
     # List command arguments
     list_parser = subparsers.add_parser('list', help='List sites')
@@ -90,4 +96,10 @@ def get_args():
 
 def main():
     args = get_args()
+    if args.password == '':
+        args.password = getpass()
+        args.token = None
+    elif args.token == '':
+        args.token = getpass('API Token: ')
+        args.password = None
     args.func(args)
