@@ -1,6 +1,6 @@
-# ISO Signal Sciences Site Management Tool
+# Signal Sciences Site Management Tool
 
-## Prequisites
+## Prerequisites
 This tool requires Python 3
 
 ## Installation
