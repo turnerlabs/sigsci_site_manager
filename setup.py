@@ -11,8 +11,8 @@ with open("README.md", "r") as fh:
 setup(
     name="sigsci_site_manager",
     version=VERSION,
-    author="Turner",
-    author_email="",
+    author="Turner ISO",
+    author_email="isodev@turner.com",
     description="Utility for managing Signal Sciences sites",
     long_description=long_description,
     long_description_content_type="text/markdown",
