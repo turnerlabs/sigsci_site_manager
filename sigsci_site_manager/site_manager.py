@@ -6,6 +6,7 @@ from sigsci_site_manager.api import init_api
 from sigsci_site_manager.backup import backup
 from sigsci_site_manager.clone import clone
 from sigsci_site_manager.deploy import deploy
+from sigsci_site_manager.merge import merge
 
 
 def do_list(args):
@@ -33,6 +34,11 @@ def do_clone(args):
 def do_backup(args):
     api = init_api(args.username, args.password, args.token, args.corp)
     backup(api, args.site_name, args.file_name)
+
+
+def do_merge(args):
+    api = init_api(args.username, args.password, args.token, args.corp)
+    merge(api, args.dst_site, args.src_site, args.file_name)
 
 
 def get_args():
@@ -97,6 +103,19 @@ def get_args():
     clone_parser.add_argument('--display-name', '-N',
                               metavar='"Display Name"', dest='display_name',
                               help='Display name of the new site')
+
+    # Merge command arguments
+    merge_parser = subparsers.add_parser(
+        'merge', help='Merge a site onto another')
+    merge_parser.set_defaults(func=do_merge)
+    merge_parser.add_argument('--dest', '-d', metavar='SITE', dest='dst_site',
+                              required=True, help='Site to merge onto')
+    merge_src_group = merge_parser.add_mutually_exclusive_group()
+    merge_src_group.add_argument('--src', '-s', metavar='SITE',
+                                 dest='src_site', help='Site to merge from')
+    merge_src_group.add_argument('--file', '-f', metavar='FILENAME',
+                                 dest='file_name',
+                                 help='Name of site file to merge from')
 
     # Return the parsed arguments
     return parser.parse_args()

@@ -99,7 +99,7 @@ def deploys(api, site_name, data, display_name):
     else:
         # Site was successfully retrieved, which means it already exists
         print("Site '%s' already exists" % site_name)
-        # return
+        return
 
     if not create_site(api, site_name, data['site'], display_name):
         return
