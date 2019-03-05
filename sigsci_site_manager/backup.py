@@ -1,15 +1,6 @@
 import json
 
-
-def filter_data(data, keys):
-    if isinstance(data, (list, tuple)):
-        ret = []
-        for item in data:
-            # Only save the data required by the create API
-            ret.append({k: item[k] for k in keys})
-    else:
-        ret = {k: data[k] for k in keys}
-    return ret
+from sigsci_site_manager.util import filter_data
 
 
 def get_site(api):

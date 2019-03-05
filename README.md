@@ -35,11 +35,12 @@ optional arguments:
                         value in $SIGSCI_API_TOKEN
 
 Commands:
-  {list,deploy,backup,clone}
+  {list,deploy,backup,clone,merge}
     list                List sites
     deploy              Deploy a new site from a file
     backup              Backup a site to a file
     clone               Clone an existing site to a new site
+    merge               Merge a site onto another
 ```
  
 ### List Command
@@ -91,4 +92,18 @@ optional arguments:
   --dest SITE, -d SITE  Site to clone to
   --display-name "Display Name", -N "Display Name"
                         Display name of the new site
+```
+
+### Merge Command
+```shell
+$ sigsci_site_manager merge --help
+usage: sigsci_site_manager merge [-h] --dest SITE
+                                 [--src SITE | --file FILENAME]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --dest SITE, -d SITE  Site to merge onto
+  --src SITE, -s SITE   Site to merge from
+  --file FILENAME, -f FILENAME
+                        Name of site file to merge from
 ```
