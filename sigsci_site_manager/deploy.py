@@ -3,20 +3,15 @@ import json
 
 def create_site(api, site_name, data, display_name):
     # Create new site
-    # Not currently supported by pysigsci
-    # POST /corps/{corpName}/sites
     if not display_name:
         display_name = site_name
     print("Creating site '%s' (%s)..." % (display_name, site_name))
     data['name'] = site_name
     data['displayName'] = display_name
-    resp = api._make_request(
-        endpoint="{}/{}/sites".format(api.ep_corps, api.corp),
-        json=data,
-        method="POST_JSON"
-    )
-    if 'message' in resp:
-        print('Error: %s' % resp['message'])
+    try:
+        api.create_corp_site(data)
+    except Exception as e:
+        print('Error: %s' % e)
         return False
     return True
 

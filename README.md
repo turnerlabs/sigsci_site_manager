@@ -69,7 +69,7 @@ optional arguments:
 $ sigsci_site_manager deploy --help
 usage: sigsci_site_manager deploy [-h] --name NAME
                                   [--display-name "Display Name"] --file
-                                  FILENAME
+                                  FILENAME [--dry-run]
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -78,13 +78,14 @@ optional arguments:
                         Display name of the site
   --file FILENAME, -f FILENAME
                         Name of site file
+  --dry-run             Print actions without making any changes
 ```
 
 ### Clone Command
 ```shell
 $ sigsci_site_manager clone --help
 usage: sigsci_site_manager clone [-h] --src SITE --dest SITE
-                                 [--display-name "Display Name"]
+                                 [--display-name "Display Name"] [--dry-run]
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -92,13 +93,14 @@ optional arguments:
   --dest SITE, -d SITE  Site to clone to
   --display-name "Display Name", -N "Display Name"
                         Display name of the new site
+  --dry-run             Print actions without making any changes
 ```
 
 ### Merge Command
 ```shell
 $ sigsci_site_manager merge --help
 usage: sigsci_site_manager merge [-h] --dest SITE
-                                 [--src SITE | --file FILENAME]
+                                 [--src SITE | --file FILENAME] [--dry-run]
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -106,4 +108,5 @@ optional arguments:
   --src SITE, -s SITE   Site to merge from
   --file FILENAME, -f FILENAME
                         Name of site file to merge from
+  --dry-run             Print actions without making any changes
 ```
