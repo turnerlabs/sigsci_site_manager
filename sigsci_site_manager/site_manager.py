@@ -22,12 +22,14 @@ def do_list(args):
 
 
 def do_deploy(args):
-    api = init_api(args.username, args.password, args.token, args.corp)
+    api = init_api(args.username, args.password, args.token, args.corp,
+                   args.dry_run)
     deploy(api, args.site_name, args.file_name, args.display_name)
 
 
 def do_clone(args):
-    api = init_api(args.username, args.password, args.token, args.corp)
+    api = init_api(args.username, args.password, args.token, args.corp,
+                   args.dry_run)
     clone(api, args.src_site, args.dst_site, args.display_name)
 
 
@@ -37,7 +39,8 @@ def do_backup(args):
 
 
 def do_merge(args):
-    api = init_api(args.username, args.password, args.token, args.corp)
+    api = init_api(args.username, args.password, args.token, args.corp,
+                   args.dry_run)
     merge(api, args.dst_site, args.src_site, args.file_name)
 
 
@@ -81,6 +84,9 @@ def get_args():
     deploy_parser.add_argument('--file', '-f', metavar='FILENAME',
                                required=True, dest='file_name',
                                help='Name of site file')
+    deploy_parser.add_argument('--dry-run', required=False,
+                               action='store_true', dest='dry_run',
+                               help='Print actions without making any changes')
 
     # Backup command arguments
     backup_parser = subparsers.add_parser('backup',
@@ -103,6 +109,9 @@ def get_args():
     clone_parser.add_argument('--display-name', '-N',
                               metavar='"Display Name"', dest='display_name',
                               help='Display name of the new site')
+    clone_parser.add_argument('--dry-run', required=False,
+                              action='store_true', dest='dry_run',
+                              help='Print actions without making any changes')
 
     # Merge command arguments
     merge_parser = subparsers.add_parser(
@@ -116,6 +125,9 @@ def get_args():
     merge_src_group.add_argument('--file', '-f', metavar='FILENAME',
                                  dest='file_name',
                                  help='Name of site file to merge from')
+    merge_parser.add_argument('--dry-run', required=False,
+                              action='store_true', dest='dry_run',
+                              help='Print actions without making any changes')
 
     # Return the parsed arguments
     return parser.parse_args()

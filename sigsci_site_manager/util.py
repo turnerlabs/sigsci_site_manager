@@ -1,6 +1,3 @@
-import json
-
-
 def filter_data(data, keys):
     if isinstance(data, (list, tuple)):
         ret = []
