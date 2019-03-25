@@ -74,6 +74,12 @@ def get_advanced_rules(api):
     return filter_data(data['data'], keys)
 
 
+def get_integrations(api):
+    keys = ['name', 'type', 'url', 'events']
+    data = api.get_integrations()
+    return filter_data(data['data'], keys)
+
+
 def backups(api, site_name):
     api.site = site_name
 
@@ -88,6 +94,7 @@ def backups(api, site_name):
     data['custom_alerts'] = get_custom_alerts(api)
     data['site_members'] = get_site_members(api)
     data['advanced_rules'] = get_advanced_rules(api)
+    data['integrations'] = get_integrations(api)
 
     return data
 
