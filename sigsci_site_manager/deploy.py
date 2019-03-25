@@ -72,6 +72,16 @@ def add_site_members(api, data):
         api.update_site_member(item['user']['email'], role)
 
 
+def create_integrations(api, data):
+    print('Adding integrations...')
+    for item in data:
+        print('  %s' % item['name'])
+        try:
+            api.add_integration(item)
+        except Exception as e:
+            print('    Failed: %s' % e)
+
+
 def generate_advanced_rules_request(api, source, data):
     print('\n\nEmail support@signalsciences.com with the following...\n')
     print('Please copy the following advanced rules from %s/%s to %s/%s:' %
@@ -108,6 +118,7 @@ def deploys(api, site_name, data, display_name):
     update_templated_rules(api, data['templated_rules'])
     create_custom_alerts(api, data['custom_alerts'])
     add_site_members(api, data['site_members'])
+    create_integrations(api, data['integrations'])
 
     generate_advanced_rules_request(
         api, data['source'], data['advanced_rules'])
