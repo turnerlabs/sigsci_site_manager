@@ -217,6 +217,37 @@ def merge_site_members(api, data):
             api.update_site_member(item['user']['email'], role)
 
 
+def merge_integrations(api, data):
+    print('Merging integrations...')
+
+    # Get existing integrations
+    keys = ['id', 'name', 'type', 'url', 'events']
+    src = api.get_integrations()
+    integs = filter_data(src['data'], keys)
+
+    # Loop through integrations to add/update
+    for item in data:
+        for integ in integs:
+            if item['url'] == integ['url'] and item['type'] == integ['type']:
+                # Integration exists, see if it needs updating
+                if sorted(item['events']) == sorted(integ['events']):
+                    # Integration events are the same, skip
+                    print('  Skipping %s (exists)' % item['name'])
+                    break
+                else:
+                    # Integration events are different, updating
+                    print('  Updating %s' % item['name'])
+                    api.update_integration(integ['id'], item)
+                    break
+        else:
+            # Add missing integration
+            print('  Adding %s' % item['name'])
+            try:
+                api.add_integration(item)
+            except Exception as e:
+                print('    Failed: %s' % e)
+
+
 def generate_advanced_rules_request(api, source, data):
     # Get the existing advanced rules
     src = api.get_advanced_rules()
@@ -257,6 +288,7 @@ def merges(api, site_name, data):
     merge_templated_rules(api, data['templated_rules'])
     merge_custom_alerts(api, data['custom_alerts'])
     merge_site_members(api, data['site_members'])
+    merge_integrations(api, data['integrations'])
 
     generate_advanced_rules_request(
         api, data['source'], data['advanced_rules'])

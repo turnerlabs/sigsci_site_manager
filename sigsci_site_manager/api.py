@@ -25,5 +25,7 @@ def init_api(username, password, token, corp, dry_run=False):
         api.update_rule_lists = noop
         api.update_custom_alert = noop
         api.update_site_member = noop
+        api.add_integration = noop
+        api.update_integration = noop
 
     return api
