@@ -10,7 +10,7 @@ def create_site(api, site_name, data, display_name):
     data['displayName'] = display_name
     try:
         api.create_corp_site(data)
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-except
         print('Error: %s' % e)
         return False
     return True
@@ -78,7 +78,7 @@ def create_integrations(api, data):
         print('  %s' % item['name'])
         try:
             api.add_integration(item)
-        except Exception as e:
+        except Exception as e:  # pylint: disable=broad-except
             print('    Failed: %s' % e)
 
 
@@ -94,7 +94,7 @@ def deploys(api, site_name, data, display_name):
     # Check that the site doesn't already exist
     try:
         api.get_corp_site(site_name)
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-except
         # If the site is not found we can continue
         if 'Site not found' in str(e):
             pass
