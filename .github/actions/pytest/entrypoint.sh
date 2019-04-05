@@ -1,3 +1,3 @@
 #!/bin/sh
-
-python3 setup.py test
+set -e
+sh -c "$*"

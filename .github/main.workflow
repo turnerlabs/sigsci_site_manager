@@ -5,5 +5,5 @@ workflow "Run Tests" {
 
 action "pytest" {
   uses = "./.github/actions/pytest"
-  args = ""
+  args = "python3 setup.py test"
 }
