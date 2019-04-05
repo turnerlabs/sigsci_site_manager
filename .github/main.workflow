@@ -1,4 +1,4 @@
-workflow "pytest" {
+workflow "Run Tests" {
   on = "push"
   resolves = ["pytest"]
 }
