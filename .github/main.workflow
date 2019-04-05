@@ -4,5 +4,5 @@ workflow "pytest" {
 }
 
 action "pytest" {
-  uses = "./github/actions/pytest"
+  uses = "./.github/actions/pytest"
 }
