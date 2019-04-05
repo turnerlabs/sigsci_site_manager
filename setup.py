@@ -1,7 +1,7 @@
 from setuptools import setup
 
 
-VERSION = "0.0.2"
+VERSION = "1.0.0"
 
 
 with open("README.md", "r") as fh:
@@ -36,9 +36,9 @@ setup(
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
-        "License :: Other/Proprietary License",
+        "License :: OSI Approved :: Apache Software License",
         "Operating System :: OS Independent",
-        "Development Status :: 3 - Alpha",
+        "Development Status :: 5 - Production/Stable",
         "Intended Audience :: System Administrators",
         "Environment :: Console",
         "Topic :: Security"
