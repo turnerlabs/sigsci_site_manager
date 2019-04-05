@@ -5,4 +5,5 @@ workflow "pytest" {
 
 action "pytest" {
   uses = "./.github/actions/pytest"
+  args = ""
 }
