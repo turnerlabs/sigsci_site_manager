@@ -35,5 +35,5 @@ action "PyPI Upload" {
   needs = ["Check dist"]
   uses = "./.github/actions/setuptools"
   secrets = ["TWINE_USERNAME", "TWINE_PASSWORD"]
-  args = "twine upload --repository-url https://test.pypi.org/legacy/ dist/*"
+  args = "twine upload dist/*"
 }
