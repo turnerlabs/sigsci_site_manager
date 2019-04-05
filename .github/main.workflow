@@ -10,7 +10,7 @@ action "pytest" {
 
 action "Check setup.py" {
   uses = "./.github/actions/setuptools"
-  args = "python3 setup.py check -ms
+  args = "python3 setup.py check -ms"
 }
 
 workflow "Release" {
