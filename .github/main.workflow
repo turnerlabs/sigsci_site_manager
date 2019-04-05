@@ -1,6 +1,6 @@
 workflow "pytest" {
   on = "push"
-  resolves = "pytest"
+  resolves = ["pytest"]
 }
 
 action "pytest" {
