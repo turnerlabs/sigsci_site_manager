@@ -172,3 +172,4 @@ def main():
         return 1
 
     args.func(args)
+    return 0
