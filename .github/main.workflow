@@ -1,16 +1,11 @@
 workflow "Test Suite" {
   on = "push"
-  resolves = ["pytest", "Check setup.py"]
+  resolves = ["pytest"]
 }
 
 action "pytest" {
   uses = "./.github/actions/pytest"
   args = "python3 setup.py test"
-}
-
-action "Check setup.py" {
-  uses = "./.github/actions/setuptools"
-  args = "python3 setup.py check -ms"
 }
 
 workflow "Release" {
