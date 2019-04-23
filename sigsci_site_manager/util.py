@@ -1,3 +1,6 @@
+from sigsci_site_manager.consts import CATEGORIES
+
+
 def filter_data(data, keys):
     if isinstance(data, (list, tuple)):
         ret = []
@@ -107,3 +110,14 @@ def equal_rules(in_a, in_b, signal_rule=False):
         match_all = True
 
     return match_all
+
+
+def build_category_list(include: list = None, exclude: list = None):
+    if include and exclude:
+        raise ValueError("include and exclude are mutually exclusive")
+    categories = set(CATEGORIES)
+    if include:
+        categories = set(include)
+    elif exclude:
+        categories -= set(exclude)
+    return categories

@@ -1,4 +1,15 @@
+from collections import OrderedDict
 import json
+
+from sigsci_site_manager.consts import (RULE_LISTS,
+                                        CUSTOM_SIGNALS,
+                                        REQUEST_RULES,
+                                        SIGNAL_RULES,
+                                        TEMPLATED_RULES,
+                                        CUSTOM_ALERTS,
+                                        SITE_MEMBERS,
+                                        INTEGRATIONS,
+                                        ADVANCED_RULES)
 
 
 def create_site(api, site_name, data, display_name):
@@ -90,7 +101,7 @@ def generate_advanced_rules_request(api, source, data):
         print('    %s (ID %s)' % (item['shortName'], item['id']))
 
 
-def deploys(api, site_name, data, display_name):
+def deploys(api, site_name, data, display_name, categories):
     # Check that the site doesn't already exist
     try:
         api.get_corp_site(site_name)
@@ -111,24 +122,48 @@ def deploys(api, site_name, data, display_name):
 
     api.site = site_name
 
-    create_rule_lists(api, data['rule_lists'])
-    create_custom_signals(api, data['custom_signals'])
-    create_request_rules(api, data['request_rules'])
-    create_signal_rules(api, data['signal_rules'])
-    update_templated_rules(api, data['templated_rules'])
-    create_custom_alerts(api, data['custom_alerts'])
-    add_site_members(api, data['site_members'])
-    create_integrations(api, data['integrations'])
+    steps = OrderedDict()
+    steps[RULE_LISTS] = (
+        create_rule_lists, (api, data['rule_lists'])
+    )
+    steps[CUSTOM_SIGNALS] = (
+        create_custom_signals, (api, data['custom_signals'])
+    )
+    steps[REQUEST_RULES] = (
+        create_request_rules, (api, data['request_rules'])
+    )
+    steps[SIGNAL_RULES] = (
+        create_signal_rules, (api, data['signal_rules'])
+    )
+    steps[TEMPLATED_RULES] = (
+        update_templated_rules, (api, data['templated_rules'])
+    )
+    steps[CUSTOM_ALERTS] = (
+        create_custom_alerts, (api, data['custom_alerts'])
+    )
+    steps[SITE_MEMBERS] = (
+        add_site_members, (api, data['site_members'])
+    )
+    steps[INTEGRATIONS] = (
+        create_integrations, (api, data['integrations'])
+    )
+    steps[ADVANCED_RULES] = (
+        generate_advanced_rules_request,
+        (api, data['source'], data['advanced_rules'])
+    )
 
-    generate_advanced_rules_request(
-        api, data['source'], data['advanced_rules'])
+    for k in steps:
+        if categories and k in categories:
+            steps[k][0](*steps[k][1])
+        else:
+            print('Skipping %s (excluded)' % k)
 
 
-def deploy(api, site_name, file_name, display_name):
+def deploy(api, site_name, file_name, display_name, categories=None):
     print("Deploying to new site '%s' from file '%s'..." %
           (site_name, file_name))
 
     with open(file_name, 'r') as f:
         data = json.loads(f.read())
 
-    deploys(api, site_name, data, display_name)
+    deploys(api, site_name, data, display_name, categories)

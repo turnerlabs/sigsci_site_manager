@@ -70,6 +70,7 @@ $ sigsci_site_manager deploy --help
 usage: sigsci_site_manager deploy [-h] --name NAME
                                   [--display-name "Display Name"] --file
                                   FILENAME [--dry-run]
+                                  [--include CATEGORY_LIST | --exclude CATEGORY_LIST]
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -79,6 +80,16 @@ optional arguments:
   --file FILENAME, -f FILENAME
                         Name of site file
   --dry-run             Print actions without making any changes
+  --include CATEGORY_LIST
+                        CSV list of categories to include in the merge.
+                        Options: RULE_LISTS, CUSTOM_SIGNALS, REQUEST_RULES,
+                        SIGNAL_RULES, TEMPLATED_RULES, CUSTOM_ALERTS,
+                        SITE_MEMBERS, INTEGRATIONS, ADVANCED_RULES
+  --exclude CATEGORY_LIST
+                        CSV list of categories to include in the merge.
+                        Options: RULE_LISTS, CUSTOM_SIGNALS, REQUEST_RULES,
+                        SIGNAL_RULES, TEMPLATED_RULES, CUSTOM_ALERTS,
+                        SITE_MEMBERS, INTEGRATIONS, ADVANCED_RULES
 ```
 
 ### Clone Command
@@ -86,6 +97,7 @@ optional arguments:
 $ sigsci_site_manager clone --help
 usage: sigsci_site_manager clone [-h] --src SITE --dest SITE
                                  [--display-name "Display Name"] [--dry-run]
+                                 [--include CATEGORY_LIST | --exclude CATEGORY_LIST]
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -94,6 +106,16 @@ optional arguments:
   --display-name "Display Name", -N "Display Name"
                         Display name of the new site
   --dry-run             Print actions without making any changes
+  --include CATEGORY_LIST
+                        CSV list of categories to include in the merge.
+                        Options: RULE_LISTS, CUSTOM_SIGNALS, REQUEST_RULES,
+                        SIGNAL_RULES, TEMPLATED_RULES, CUSTOM_ALERTS,
+                        SITE_MEMBERS, INTEGRATIONS, ADVANCED_RULES
+  --exclude CATEGORY_LIST
+                        CSV list of categories to include in the merge.
+                        Options: RULE_LISTS, CUSTOM_SIGNALS, REQUEST_RULES,
+                        SIGNAL_RULES, TEMPLATED_RULES, CUSTOM_ALERTS,
+                        SITE_MEMBERS, INTEGRATIONS, ADVANCED_RULES
 ```
 
 ### Merge Command
@@ -101,6 +123,7 @@ optional arguments:
 $ sigsci_site_manager merge --help
 usage: sigsci_site_manager merge [-h] --dest SITE
                                  [--src SITE | --file FILENAME] [--dry-run]
+                                 [--include CATEGORY_LIST | --exclude CATEGORY_LIST]
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -109,4 +132,14 @@ optional arguments:
   --file FILENAME, -f FILENAME
                         Name of site file to merge from
   --dry-run             Print actions without making any changes
+  --include CATEGORY_LIST
+                        CSV list of categories to include in the merge.
+                        Options: RULE_LISTS, CUSTOM_SIGNALS, REQUEST_RULES,
+                        SIGNAL_RULES, TEMPLATED_RULES, CUSTOM_ALERTS,
+                        SITE_MEMBERS, INTEGRATIONS, ADVANCED_RULES
+  --exclude CATEGORY_LIST
+                        CSV list of categories to include in the merge.
+                        Options: RULE_LISTS, CUSTOM_SIGNALS, REQUEST_RULES,
+                        SIGNAL_RULES, TEMPLATED_RULES, CUSTOM_ALERTS,
+                        SITE_MEMBERS, INTEGRATIONS, ADVANCED_RULES
 ```

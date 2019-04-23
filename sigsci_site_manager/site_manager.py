@@ -5,8 +5,10 @@ import os
 from sigsci_site_manager.api import init_api
 from sigsci_site_manager.backup import backup
 from sigsci_site_manager.clone import clone
+from sigsci_site_manager.consts import CATEGORIES
 from sigsci_site_manager.deploy import deploy
 from sigsci_site_manager.merge import merge
+from sigsci_site_manager.util import build_category_list
 
 
 def do_list(args):
@@ -24,13 +26,15 @@ def do_list(args):
 def do_deploy(args):
     api = init_api(args.username, args.password, args.token, args.corp,
                    args.dry_run)
-    deploy(api, args.site_name, args.file_name, args.display_name)
+    deploy(api, args.site_name, args.file_name, args.display_name,
+           build_category_list(args.include, args.exclude))
 
 
 def do_clone(args):
     api = init_api(args.username, args.password, args.token, args.corp,
                    args.dry_run)
-    clone(api, args.src_site, args.dst_site, args.display_name)
+    clone(api, args.src_site, args.dst_site, args.display_name,
+          build_category_list(args.include, args.exclude))
 
 
 def do_backup(args):
@@ -41,10 +45,20 @@ def do_backup(args):
 def do_merge(args):
     api = init_api(args.username, args.password, args.token, args.corp,
                    args.dry_run)
-    merge(api, args.dst_site, args.src_site, args.file_name)
+    merge(api, args.dst_site, args.src_site, args.file_name,
+          build_category_list(args.include, args.exclude))
 
 
 def get_args():
+
+    def _validate_category_list(value: str):
+        value_list = value.upper().split(',')
+        for item in value_list:
+            if item not in CATEGORIES:
+                raise argparse.ArgumentTypeError(
+                    '%s is not a valid category %s' % (item, CATEGORIES))
+        return value_list
+
     # Top-level arguments
     parser = argparse.ArgumentParser(
         description='Signal Sciences site management')
@@ -87,6 +101,17 @@ def get_args():
     deploy_parser.add_argument('--dry-run', required=False,
                                action='store_true', dest='dry_run',
                                help='Print actions without making any changes')
+    deploy_cat_group = deploy_parser.add_mutually_exclusive_group()
+    deploy_cat_group.add_argument(
+        '--include', required=False, metavar='CATEGORY_LIST',
+        type=_validate_category_list, help=(
+            'CSV list of categories to include in the merge. Options: %s' %
+            ', '.join(CATEGORIES)))
+    deploy_cat_group.add_argument(
+        '--exclude', required=False, metavar='CATEGORY_LIST',
+        type=_validate_category_list, help=(
+            'CSV list of categories to include in the merge. Options: %s' %
+            ', '.join(CATEGORIES)))
 
     # Backup command arguments
     backup_parser = subparsers.add_parser('backup',
@@ -112,6 +137,17 @@ def get_args():
     clone_parser.add_argument('--dry-run', required=False,
                               action='store_true', dest='dry_run',
                               help='Print actions without making any changes')
+    clone_cat_group = clone_parser.add_mutually_exclusive_group()
+    clone_cat_group.add_argument(
+        '--include', required=False, metavar='CATEGORY_LIST',
+        type=_validate_category_list, help=(
+            'CSV list of categories to include in the merge. Options: %s' %
+            ', '.join(CATEGORIES)))
+    clone_cat_group.add_argument(
+        '--exclude', required=False, metavar='CATEGORY_LIST',
+        type=_validate_category_list, help=(
+            'CSV list of categories to include in the merge. Options: %s' %
+            ', '.join(CATEGORIES)))
 
     # Merge command arguments
     merge_parser = subparsers.add_parser(
@@ -128,6 +164,17 @@ def get_args():
     merge_parser.add_argument('--dry-run', required=False,
                               action='store_true', dest='dry_run',
                               help='Print actions without making any changes')
+    merge_cat_group = merge_parser.add_mutually_exclusive_group()
+    merge_cat_group.add_argument(
+        '--include', required=False, metavar='CATEGORY_LIST',
+        type=_validate_category_list, help=(
+            'CSV list of categories to include in the merge. Options: %s' %
+            ', '.join(CATEGORIES)))
+    merge_cat_group.add_argument(
+        '--exclude', required=False, metavar='CATEGORY_LIST',
+        type=_validate_category_list, help=(
+            'CSV list of categories to include in the merge. Options: %s' %
+            ', '.join(CATEGORIES)))
 
     # Return the parsed arguments
     return parser.parse_args()
