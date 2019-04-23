@@ -46,10 +46,11 @@ Commands:
 ### List Command
 ```shell
 $ sigsci_site_manager list --help
-usage: sigsci_site_manager list [-h]
+usage: sigsci_site_manager list [-h] [--filter PATTERN]
 
 optional arguments:
   -h, --help  show this help message and exit
+  --filter PATTERN  Filter site names using a wildcard pattern
 ```
 
 ### Backup Command
@@ -101,12 +102,14 @@ optional arguments:
 $ sigsci_site_manager merge --help
 usage: sigsci_site_manager merge [-h] --dest SITE
                                  [--src SITE | --file FILENAME] [--dry-run]
+                                 [--yes]
 
 optional arguments:
   -h, --help            show this help message and exit
-  --dest SITE, -d SITE  Site to merge onto
+  --dest SITE, -d SITE  Site to merge onto (accepts wildcard pattern)
   --src SITE, -s SITE   Site to merge from
   --file FILENAME, -f FILENAME
                         Name of site file to merge from
   --dry-run             Print actions without making any changes
+  --yes, -y             Automatic yes to prompts
 ```

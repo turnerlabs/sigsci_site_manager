@@ -1,4 +1,5 @@
 import argparse
+import fnmatch
 from getpass import getpass
 import os
 
@@ -10,11 +11,16 @@ from sigsci_site_manager.merge import merge
 
 
 def do_list(args):
-    print('Listing sites for "%s":' % args.corp)
+    print('Listing sites for "%s"%s:' %
+          (args.corp, ' matching "%s"' %
+           args.filter if args.filter != '*' else ''))
     api = init_api(args.username, args.password, args.token, args.corp)
     resp = api.get_corp_sites()
-    sites = ['%s [%s]' % (site['displayName'], site['name'])
-             for site in resp['data']]
+    sites = []
+    for site in resp['data']:
+        if fnmatch.fnmatch(site['name'], args.filter):
+            # Only include sites that match the filter pattern
+            sites.append('%s [%s]' % (site['displayName'], site['name']))
     sites.sort()
     for name in sites:
         print('  %s' % name)
@@ -41,7 +47,44 @@ def do_backup(args):
 def do_merge(args):
     api = init_api(args.username, args.password, args.token, args.corp,
                    args.dry_run)
-    merge(api, args.dst_site, args.src_site, args.file_name)
+
+    # Get the current sites
+    resp = api.get_corp_sites()
+
+    # Filter the sites based on the provided destination pattern
+    sites = []
+    for site in resp['data']:
+        if fnmatch.fnmatch(site['name'], args.dst_site):
+            sites.append(site['name'])
+
+    # If the user provided an exact match name we don't want to change the
+    # existing behavior of the merge command
+    exact_match = False
+    if len(sites) == 1 and sites[0] == args.dst_site:
+        exact_match = True
+
+    # Get confirmation of merge action if the name wasn't an exact match
+    if not exact_match:
+        # If no sites matched the filter print an error and return
+        if not sites:
+            print("No sites match '%s'" % args.dst_site)
+            return
+        print('Merging %s with %d site%s:' %
+              (args.src_site, len(sites), 's' if len(sites) > 1 else ''))
+        for site in sites:
+            print('  %s' % site)
+        str_input = 'Do you want to continue [y/N]? '
+        if args.yes:
+            # If user specified --yes print the confirmation string with 'y' to
+            # give positive feedback of the action
+            print('%sy' % str_input)
+        else:
+            cont = input(str_input)
+
+    # If confirmed, merge with identified sites
+    if exact_match or args.yes or cont.lower() in ['y', 'yes']:
+        for site in sites:
+            merge(api, site, args.src_site, args.file_name)
 
 
 def get_args():
@@ -70,6 +113,9 @@ def get_args():
     # List command arguments
     list_parser = subparsers.add_parser('list', help='List sites')
     list_parser.set_defaults(func=do_list)
+    list_parser.add_argument('--filter', metavar='PATTERN', required=False,
+                             default='*',
+                             help='Filter site names using a wildcard pattern')
 
     # Deploy command arguments
     deploy_parser = subparsers.add_parser(
@@ -117,8 +163,9 @@ def get_args():
     merge_parser = subparsers.add_parser(
         'merge', help='Merge a site onto another')
     merge_parser.set_defaults(func=do_merge)
-    merge_parser.add_argument('--dest', '-d', metavar='SITE', dest='dst_site',
-                              required=True, help='Site to merge onto')
+    merge_parser.add_argument(
+        '--dest', '-d', metavar='SITE', dest='dst_site', required=True,
+        help='Site to merge onto (accepts wildcard pattern)')
     merge_src_group = merge_parser.add_mutually_exclusive_group()
     merge_src_group.add_argument('--src', '-s', metavar='SITE',
                                  dest='src_site', help='Site to merge from')
@@ -128,6 +175,8 @@ def get_args():
     merge_parser.add_argument('--dry-run', required=False,
                               action='store_true', dest='dry_run',
                               help='Print actions without making any changes')
+    merge_parser.add_argument('--yes', '-y', action='store_true',
+                              help='Automatic yes to prompts')
 
     # Return the parsed arguments
     return parser.parse_args()
