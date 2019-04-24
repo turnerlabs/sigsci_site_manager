@@ -1,12 +1,14 @@
 # Signal Sciences Site Management Tool
 
-## Prerequisites
-This tool requires Python 3
+[![](https://img.shields.io/pypi/v/sigsci_site_manager.svg)](https://pypi.org/project/sigsci-site-manager/)
+![](https://img.shields.io/pypi/pyversions/sigsci_site_manager.svg)
+![](https://img.shields.io/pypi/format/sigsci_site_manager.svg)
+![](https://img.shields.io/github/license/turnerlabs/sigsci_site_manager.svg)
 
 ## Installation
 
 ```shell
-$ python3 setup.py install
+$ pip3 install sigsci_site_manager
 ```
 
 ## Usage
