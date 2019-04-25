@@ -280,6 +280,8 @@ def merge_integrations(api, data):
 
 
 def generate_advanced_rules_request(api, source, data):
+    print('Merging advanced rules...')
+
     # Get the existing advanced rules
     src = api.get_advanced_rules()
     rules = filter_data(src.get('data', []), ['shortName'])
@@ -289,10 +291,17 @@ def generate_advanced_rules_request(api, source, data):
     email += ('Please copy the following advanced rules from %s/%s to %s/%s:' %
               (source['corp'], source['site'], api.corp, api.site))
     make_request = False
+    skipped = []
     for item in data:
         if item['shortName'] not in rule_names:
             email += '\n    %s (ID %s)' % (item['shortName'], item['id'])
             make_request = True
+        else:
+            skipped.append(item['shortName'])
+
+    for item in skipped:
+        print('  Skipping %s (exists)' % item)
+
     if make_request:
         print(email)
 
