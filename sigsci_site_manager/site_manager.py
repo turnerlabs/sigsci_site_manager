@@ -88,7 +88,7 @@ def do_merge(args):
     # If confirmed, merge with identified sites
     if exact_match or args.yes or cont.lower() in ['y', 'yes']:
         for site in sites:
-            merge(api, args.dst_site, args.src_site, args.file_name,
+            merge(api, site, args.src_site, args.file_name,
                   build_category_list(args.include, args.exclude))
 
 
