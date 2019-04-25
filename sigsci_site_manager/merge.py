@@ -350,6 +350,7 @@ def merges(api, site_name, data, categories):
 
 def merge(api, dst_site, src_site=None, file_name=None, categories=None):
     if src_site:
+        print('=' * 80)
         print("Merging site '%s' onto site '%s'..." % (src_site, dst_site))
         data = backups(api, src_site)
     elif file_name:
