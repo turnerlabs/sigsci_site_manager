@@ -282,10 +282,10 @@ def merge_integrations(api, data):
 def generate_advanced_rules_request(api, source, data):
     # Get the existing advanced rules
     src = api.get_advanced_rules()
-    rules = filter_data(src['data'], ['shortName'])
+    rules = filter_data(src.get('data', []), ['shortName'])
     rule_names = [r['shortName'] for r in rules]
 
-    email = '\n\nEmail support@signalsciences.com with the following...\n'
+    email = '\nEmail support@signalsciences.com with the following...\n'
     email += ('Please copy the following advanced rules from %s/%s to %s/%s:' %
               (source['corp'], source['site'], api.corp, api.site))
     make_request = False
