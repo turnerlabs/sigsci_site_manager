@@ -1,6 +1,16 @@
+from collections import OrderedDict
 import json
 
 from sigsci_site_manager.backup import backups
+from sigsci_site_manager.consts import (RULE_LISTS,
+                                        CUSTOM_SIGNALS,
+                                        REQUEST_RULES,
+                                        SIGNAL_RULES,
+                                        TEMPLATED_RULES,
+                                        CUSTOM_ALERTS,
+                                        SITE_MEMBERS,
+                                        INTEGRATIONS,
+                                        ADVANCED_RULES)
 from sigsci_site_manager.util import filter_data, equal_rules
 
 
@@ -270,24 +280,33 @@ def merge_integrations(api, data):
 
 
 def generate_advanced_rules_request(api, source, data):
+    print('Merging advanced rules...')
+
     # Get the existing advanced rules
     src = api.get_advanced_rules()
-    rules = filter_data(src['data'], ['shortName'])
+    rules = filter_data(src.get('data', []), ['shortName'])
     rule_names = [r['shortName'] for r in rules]
 
-    email = '\n\nEmail support@signalsciences.com with the following...\n'
+    email = '\nEmail support@signalsciences.com with the following...\n'
     email += ('Please copy the following advanced rules from %s/%s to %s/%s:' %
               (source['corp'], source['site'], api.corp, api.site))
     make_request = False
+    skipped = []
     for item in data:
         if item['shortName'] not in rule_names:
             email += '\n    %s (ID %s)' % (item['shortName'], item['id'])
             make_request = True
+        else:
+            skipped.append(item['shortName'])
+
+    for item in skipped:
+        print('  Skipping %s (exists)' % item)
+
     if make_request:
         print(email)
 
 
-def merges(api, site_name, data):
+def merges(api, site_name, data, categories):
     # Check that the site already exists
     try:
         api.get_corp_site(site_name)
@@ -301,20 +320,44 @@ def merges(api, site_name, data):
 
     api.site = site_name
 
-    merge_rule_lists(api, data['rule_lists'])
-    merge_custom_signals(api, data['custom_signals'])
-    merge_request_rules(api, data['request_rules'])
-    merge_signal_rules(api, data['signal_rules'])
-    merge_templated_rules(api, data['templated_rules'])
-    merge_custom_alerts(api, data['custom_alerts'])
-    merge_site_members(api, data['site_members'])
-    merge_integrations(api, data['integrations'])
+    steps = OrderedDict()
+    steps[RULE_LISTS] = (
+        merge_rule_lists, (api, data['rule_lists'])
+    )
+    steps[CUSTOM_SIGNALS] = (
+        merge_custom_signals, (api, data['custom_signals'])
+    )
+    steps[REQUEST_RULES] = (
+        merge_request_rules, (api, data['request_rules'])
+    )
+    steps[SIGNAL_RULES] = (
+        merge_signal_rules, (api, data['signal_rules'])
+    )
+    steps[TEMPLATED_RULES] = (
+        merge_templated_rules, (api, data['templated_rules'])
+    )
+    steps[CUSTOM_ALERTS] = (
+        merge_custom_alerts, (api, data['custom_alerts'])
+    )
+    steps[SITE_MEMBERS] = (
+        merge_site_members, (api, data['site_members'])
+    )
+    steps[INTEGRATIONS] = (
+        merge_integrations, (api, data['integrations'])
+    )
+    steps[ADVANCED_RULES] = (
+        generate_advanced_rules_request,
+        (api, data['source'], data['advanced_rules'])
+    )
 
-    generate_advanced_rules_request(
-        api, data['source'], data['advanced_rules'])
+    for k in steps:
+        if categories and k in categories:
+            steps[k][0](*steps[k][1])
+        else:
+            print('Skipping %s (excluded)' % k)
 
 
-def merge(api, dst_site, src_site=None, file_name=None):
+def merge(api, dst_site, src_site=None, file_name=None, categories=None):
     if src_site:
         print('=' * 80)
         print("Merging site '%s' onto site '%s'..." % (src_site, dst_site))
@@ -324,4 +367,4 @@ def merge(api, dst_site, src_site=None, file_name=None):
         with open(file_name, 'r') as f:
             data = json.loads(f.read())
 
-    merges(api, dst_site, data)
+    merges(api, dst_site, data, categories)

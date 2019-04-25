@@ -71,7 +71,7 @@ def get_site_members(api):
 def get_advanced_rules(api):
     keys = ['id', 'shortName']
     data = api.get_advanced_rules()
-    return filter_data(data['data'], keys)
+    return filter_data(data.get('data', []), keys)
 
 
 def get_integrations(api):
