@@ -17,6 +17,12 @@ class DummyAPI(object):
     def create_corp_site(self, *args, **kwargs):
         return
 
+    def get_corp_users(self, *args, **kwargs):
+        return {'data': [{'email': 'test@test.com', 'apiUser': False}]}
+
+    def add_corp_user(self, *args, **kwargs):
+        return
+
 
 API = DummyAPI()
 
@@ -27,7 +33,10 @@ DATA = {
     'signal_rules': [],
     'templated_rules': [],
     'custom_alerts': [],
-    'site_members': [{'user': {'email': ''}, 'role': ''}],
+    'site_members': [{
+        'user': {'email': 'test@test.com', 'apiUser': False},
+        'role': ''
+    }],
     'integrations': [],
     'source': {'corp': 'dummy', 'site': 'dummy_src'},
     'advanced_rules': [],
