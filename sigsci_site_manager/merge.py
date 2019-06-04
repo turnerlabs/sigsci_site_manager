@@ -11,7 +11,7 @@ from sigsci_site_manager.consts import (RULE_LISTS,
                                         SITE_MEMBERS,
                                         INTEGRATIONS,
                                         ADVANCED_RULES)
-from sigsci_site_manager.util import filter_data, equal_rules
+from sigsci_site_manager.util import add_new_user, filter_data, equal_rules
 
 
 def _find_match(needle: dict, haystack: list, keys: list):
@@ -229,10 +229,15 @@ def merge_custom_alerts(api, data):
 def merge_site_members(api, data):
     print('Merging users...')
 
-    # Get existing users
+    # Get existing site users
     keys = ['user']
     src = api.get_site_members()
     users = filter_data(src['data'], keys)
+
+    # Get existing corp users in case user needs to be added
+    keys = ['email']
+    src = api.get_corp_users()
+    corp_users = [user['email'] for user in filter_data(src['data'], keys)]
 
     # Loop through the users to add
     for item in data:
@@ -242,10 +247,22 @@ def merge_site_members(api, data):
                 print('  Skipping %s (exists)' % item['user']['email'])
                 break
         else:
-            # Add missing user
-            print('  Adding %s' % item['user']['email'])
-            role = {'role': item['role']}
-            api.update_site_member(item['user']['email'], role)
+            if item['user']['email'] not in corp_users:
+                # User does not exist in corp so invite it to the corp and add
+                # it to the site
+                print('  %s (New user - Corp role: %s, API user: %s)' %
+                      (item['user']['email'],
+                       item['role'],
+                       item['user']['apiUser']))
+                add_new_user(api,
+                             item['user']['email'],
+                             item['role'],
+                             item['user']['apiUser'])
+            else:
+                # Add missing user
+                print('  Adding %s' % item['user']['email'])
+                role = {'role': item['role']}
+                api.update_site_member(item['user']['email'], role)
 
 
 def merge_integrations(api, data):

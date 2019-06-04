@@ -10,6 +10,7 @@ from sigsci_site_manager.consts import (RULE_LISTS,
                                         SITE_MEMBERS,
                                         INTEGRATIONS,
                                         ADVANCED_RULES)
+from sigsci_site_manager.util import add_new_user, filter_data
 
 
 def create_site(api, site_name, data, display_name):
@@ -74,13 +75,31 @@ def create_custom_alerts(api, data):
 
 def add_site_members(api, data):
     print('Adding users...')
+
+    # Get existing corp users in case user needs to be added
+    keys = ['email']
+    src = api.get_corp_users()
+    users = [user['email'] for user in filter_data(src['data'], keys)]
     for item in data:
-        if item['role'] == 'owner':
+        if item['user']['email'] not in users:
+            # User does not exist in corp so invite it to the corp and add it
+            # to the site
+            print('  %s (New user - Corp role: %s, API user: %s)' %
+                  (item['user']['email'],
+                   item['role'],
+                   item['user']['apiUser']))
+            add_new_user(api,
+                         item['user']['email'],
+                         item['role'],
+                         item['user']['apiUser'])
+        elif item['role'] == 'owner':
             # Owners are auto-added at site creation
             continue
-        print('  %s' % item['user']['email'])
-        role = {'role': item['role']}
-        api.update_site_member(item['user']['email'], role)
+        else:
+            # User exists in corp and is not an owner to add it to the site
+            print('  %s' % item['user']['email'])
+            role = {'role': item['role']}
+            api.update_site_member(item['user']['email'], role)
 
 
 def create_integrations(api, data):

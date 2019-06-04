@@ -121,3 +121,31 @@ def build_category_list(include: list = None, exclude: list = None):
     elif exclude:
         categories -= set(exclude)
     return categories
+
+
+def add_new_user(api, email, role, api_user):
+    # Build the user data structure
+    corp_role = 'corpUser'
+    if role == 'observer':
+        corp_role = 'corpObserver'
+    elif role == 'admin':
+        corp_role = 'corpAdmin'
+    data = {
+        'email': email,
+        'memberships': {
+            'data': [{
+                'site': {
+                    'name': api.site
+                }
+            }]
+        },
+        'role': corp_role,
+        'apiUser': api_user
+    }
+
+    api.add_corp_user(email, data)
+
+    if api_user:
+        # API users can't be added as API users directly so update
+        # after adding to enable API
+        api.update_corp_user(email, data)
