@@ -45,6 +45,12 @@ def get_templated_rules(api):
             # Skip empty rules
             continue
 
+        # Work around bug in SigSci API where the skipNotifications key is
+        # missing if notifications are enabled
+        for alert in rule['alerts']:
+            if 'skipNotifications' not in alert:
+                alert['skipNotifications'] = False
+
         # Reformat the retrieved data into the structure needed for adding the
         # templated rule to a clean site.
         ret[rule['name']] = {'detectionAdds': [], 'alertAdds': []}
