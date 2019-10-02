@@ -10,6 +10,7 @@ from sigsci_site_manager.consts import CATEGORIES
 from sigsci_site_manager.deploy import deploy
 from sigsci_site_manager.merge import merge
 from sigsci_site_manager.util import build_category_list
+from sigsci_site_manager.validate import validate
 
 
 def do_list(args):
@@ -90,6 +91,12 @@ def do_merge(args):
         for site in sites:
             merge(api, site, args.src_site, args.file_name,
                   build_category_list(args.include, args.exclude))
+
+
+def do_validate(args):
+    api = init_api(args.username, args.password, args.token, args.corp,
+                   args.dry_run)
+    validate(api, args.site_name, args.target, args.dry_run)
 
 
 def get_args():
@@ -224,6 +231,19 @@ def get_args():
             ', '.join(CATEGORIES)))
     merge_parser.add_argument('--yes', '-y', action='store_true',
                               help='Automatic yes to prompts')
+
+    # Validate command arguments
+    validate_parser = subparsers.add_parser('validate',
+                                            help='Validate a site deployment')
+    validate_parser.set_defaults(func=do_validate)
+    validate_parser.add_argument('--name', '-n', metavar='NAME', required=True,
+                                 dest='site_name', help='Site name')
+    validate_parser.add_argument('--target', '-d', metavar='HOSTNAME',
+                                 required=True, dest='target',
+                                 help='Hostname or IP to test against')
+    validate_parser.add_argument(
+        '--dry-run', required=False, action='store_true', dest='dry_run',
+        help='Print actions without making any changes')
 
     # Return the parsed arguments
     return parser.parse_args()
