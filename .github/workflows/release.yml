@@ -2,6 +2,7 @@ on: release
 name: Release
 jobs:
   pytest:
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@master
@@ -10,6 +11,7 @@ jobs:
       - name: pytest
         run: python3 setup.py test
   release:
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@master
