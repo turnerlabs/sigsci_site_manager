@@ -238,9 +238,9 @@ def get_args():
     validate_parser.set_defaults(func=do_validate)
     validate_parser.add_argument('--name', '-n', metavar='NAME', required=True,
                                  dest='site_name', help='Site name')
-    validate_parser.add_argument('--target', '-d', metavar='HOSTNAME',
+    validate_parser.add_argument('--target', '-d', metavar='URL',
                                  required=True, dest='target',
-                                 help='Hostname or IP to test against')
+                                 help='URL to test against')
     validate_parser.add_argument(
         '--dry-run', required=False, action='store_true', dest='dry_run',
         help='Print actions without making any changes')

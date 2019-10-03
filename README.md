@@ -148,3 +148,15 @@ optional arguments:
                         SITE_MEMBERS, INTEGRATIONS, ADVANCED_RULES
   --yes, -y             Automatic yes to prompts
 ```
+
+### Validate Command
+```shell
+$ sigsci_site_manager validate --help
+usage: sigsci_site_manager validate [-h] --name NAME --target URL [--dry-run]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --name NAME, -n NAME  Site name
+  --target URL, -d URL  URL to test against
+  --dry-run             Print actions without making any changes
+  ```
