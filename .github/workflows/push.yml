@@ -1,0 +1,12 @@
+on: push
+name: Test Suite
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@master
+      - name: Setup python
+        uses: actions/setup-python@v1
+      - name: pytest
+        run: python3 setup.py test

@@ -1,0 +1,30 @@
+on: release
+name: Release
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@master
+      - name: Setup python
+        uses: actions/setup-python@v1
+      - name: pytest
+        run: python3 setup.py test
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@master
+      - name: Setup python
+        uses: actions/setup-python@v1
+      - name: Build bdist_wheel
+        run: python3 setup.py bdist_wheel
+      - name: Build bdist_wheel
+        run: python3 setup.py sdist
+      - name: Check dist
+        run: twine check dist/*
+      - name: PyPI Upload
+        env:
+          TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
+          TWINE_USERNAME: ${{ secrets.TWINE_USERNAME }}
+        run: twine upload dist/*
