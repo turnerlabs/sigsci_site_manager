@@ -17,6 +17,8 @@ jobs:
         uses: actions/checkout@master
       - name: Setup python
         uses: actions/setup-python@v1
+      - name: Install utilities
+        run: pip3 install --upgrade setuptools wheel twine
       - name: Build bdist_wheel
         run: python3 setup.py bdist_wheel
       - name: Build bdist_wheel
