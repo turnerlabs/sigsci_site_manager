@@ -44,5 +44,6 @@ def init_api(username, password, token, corp, dry_run=False):
         api.update_integration = noop
         api.add_corp_user = noop
         api.update_corp_user = noop
+        api.get_requests = noop
 
     return api
