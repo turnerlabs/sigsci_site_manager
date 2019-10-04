@@ -11,6 +11,7 @@ from sigsci_site_manager.deploy import deploy
 from sigsci_site_manager.merge import merge
 from sigsci_site_manager.util import build_category_list
 from sigsci_site_manager.validate import validate
+from sigsci_site_manager.__version__ import __version__
 
 
 def do_list(args):
@@ -111,7 +112,7 @@ def get_args():
 
     # Top-level arguments
     parser = argparse.ArgumentParser(
-        description='Signal Sciences site management')
+        description='Signal Sciences site management %s' % __version__)
     subparsers = parser.add_subparsers(title='Commands', dest='command')
     subparsers.required = True
     parser.add_argument('--corp', '-c', metavar='CORP', dest='corp',

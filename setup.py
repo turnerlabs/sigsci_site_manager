@@ -1,8 +1,10 @@
 from setuptools import setup
 
-
-VERSION = "1.2.0"
-
+# Get the version from the package. This allows the version to be
+# available inside the package for use at runtime.
+__version__ = None  # Will get set in next line
+# pylint: disable=exec-used
+exec(open("sigsci_site_manager/__version__.py").read())
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
@@ -10,7 +12,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name="sigsci_site_manager",
-    version=VERSION,
+    version=__version__,
     author="Turner ISO",
     author_email="isodev@turner.com",
     description="Utility for managing Signal Sciences sites",
