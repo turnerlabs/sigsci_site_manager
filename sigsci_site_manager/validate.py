@@ -3,6 +3,8 @@ import uuid
 
 import requests
 
+from sigsci_site_manager.__version__ import __version__
+
 HEADER = "X-SigSci-Site-Manager-Test-Id"
 
 DEFAULT_TEST_CASES = [
@@ -27,11 +29,11 @@ def validate(api, site, hostname, dry_run, test_cases=None):
     print("Running test cases...")
     for test_case in test_cases:
         nonce = str(uuid.uuid4())
+        nonces.append(nonce)
         try:
             run_test_case(hostname, test_case, nonce, dry_run)
-            nonces.append(nonce)
-        except requests.exceptions.RequestException as e:
-            print("  Error: %s" % e)
+        except requests.exceptions.RequestException:
+            print("  Error sending request")
 
     print("Waiting for SigSci agent to upload request logs...")
     if not dry_run:
@@ -53,6 +55,7 @@ def run_test_case(hostname, test_case, nonce, dry_run):
         return
 
     headers = {
+        "User-Agent": "sigsci_site_manager/%s" % __version__,
         HEADER: nonce
     }
 
@@ -73,7 +76,7 @@ def search_requests_log_all(api, site, nonces):
 
     success = True
     for nonce in nonces:
-        if not search_requests_log(r["data"], nonce):
+        if not search_requests_log(r.get("data", []), nonce):
             success = False
     return success
 
