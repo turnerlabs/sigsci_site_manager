@@ -164,7 +164,7 @@ def get_args():
     deploy_cat_group.add_argument(
         '--exclude', required=False, metavar='CATEGORY_LIST',
         type=_validate_category_list, help=(
-            'CSV list of categories to include in the merge. Options: %s' %
+            'CSV list of categories to exclude in the merge. Options: %s' %
             ', '.join(CATEGORIES)))
 
     # Backup command arguments
