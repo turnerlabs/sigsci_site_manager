@@ -89,7 +89,7 @@ optional arguments:
                         SIGNAL_RULES, TEMPLATED_RULES, CUSTOM_ALERTS,
                         SITE_MEMBERS, INTEGRATIONS, ADVANCED_RULES
   --exclude CATEGORY_LIST
-                        CSV list of categories to include in the merge.
+                        CSV list of categories to exclude in the merge.
                         Options: RULE_LISTS, CUSTOM_SIGNALS, REQUEST_RULES,
                         SIGNAL_RULES, TEMPLATED_RULES, CUSTOM_ALERTS,
                         SITE_MEMBERS, INTEGRATIONS, ADVANCED_RULES
@@ -115,7 +115,7 @@ optional arguments:
                         SIGNAL_RULES, TEMPLATED_RULES, CUSTOM_ALERTS,
                         SITE_MEMBERS, INTEGRATIONS, ADVANCED_RULES
   --exclude CATEGORY_LIST
-                        CSV list of categories to include in the merge.
+                        CSV list of categories to exclude in the merge.
                         Options: RULE_LISTS, CUSTOM_SIGNALS, REQUEST_RULES,
                         SIGNAL_RULES, TEMPLATED_RULES, CUSTOM_ALERTS,
                         SITE_MEMBERS, INTEGRATIONS, ADVANCED_RULES
@@ -142,7 +142,7 @@ optional arguments:
                         SIGNAL_RULES, TEMPLATED_RULES, CUSTOM_ALERTS,
                         SITE_MEMBERS, INTEGRATIONS, ADVANCED_RULES
   --exclude CATEGORY_LIST
-                        CSV list of categories to include in the merge.
+                        CSV list of categories to exclude in the merge.
                         Options: RULE_LISTS, CUSTOM_SIGNALS, REQUEST_RULES,
                         SIGNAL_RULES, TEMPLATED_RULES, CUSTOM_ALERTS,
                         SITE_MEMBERS, INTEGRATIONS, ADVANCED_RULES
