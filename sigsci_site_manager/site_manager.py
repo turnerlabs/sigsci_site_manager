@@ -91,7 +91,8 @@ def do_merge(args):
     if exact_match or args.yes or cont.lower() in ['y', 'yes']:
         for site in sites:
             merge(api, site, args.src_site, args.file_name,
-                  build_category_list(args.include, args.exclude))
+                  build_category_list(args.include, args.exclude),
+                  args.overwrite_templated_rules)
 
 
 def do_validate(args):
@@ -219,6 +220,9 @@ def get_args():
     merge_parser.add_argument('--dry-run', required=False,
                               action='store_true', dest='dry_run',
                               help='Print actions without making any changes')
+    merge_parser.add_argument('--overwrite-templated-rules', default=False,
+                              action='store_true', dest='overwrite_templated_rules',
+                              help='Overwrite existing template rules.')
     merge_cat_group = merge_parser.add_mutually_exclusive_group()
     merge_cat_group.add_argument(
         '--include', required=False, metavar='CATEGORY_LIST',
