@@ -13,6 +13,7 @@ from sigsci_site_manager.consts import (RULE_LISTS,
                                         ADVANCED_RULES)
 from sigsci_site_manager.util import add_new_user, filter_data, equal_rules
 
+OVERWRITE_TEMPLATED_RULES = False
 
 def _find_match(needle: dict, haystack: list, keys: list):
     """Find a dictionary in a list of dictionary based on a set of keys"""
@@ -178,12 +179,18 @@ def merge_templated_rules(api, data):
 
     # Loop through the templated rules
     for item in data:
-        if item in rule_names:
+        if item in rule_names and not OVERWRITE_TEMPLATED_RULES:
             # Rule name in the list of already configured rules so skip
             print('  Skipping %s (configured)' % item)
         else:
-            print('  Adding %s' % item)
+            
             try:
+                if OVERWRITE_TEMPLATED_RULES:
+                    print('  Overwritting %s (configured)' % item)
+                    api.delete_templated_rule(item)
+                else:
+                    print('  Adding %s' % item)
+
                 api.add_templated_rules(item, data[item])
             except Exception as e:  # pylint: disable=broad-except
                 print('    Failed: %s' % e)
@@ -374,7 +381,9 @@ def merges(api, site_name, data, categories):
             print('Skipping %s (excluded)' % k)
 
 
-def merge(api, dst_site, src_site=None, file_name=None, categories=None):
+def merge(api, dst_site, src_site=None, file_name=None, categories=None, overwrite_templated_rules=False):
+    global OVERWRITE_TEMPLATED_RULES
+
     if src_site:
         print('=' * 80)
         print("Merging site '%s' onto site '%s'..." % (src_site, dst_site))
@@ -383,5 +392,7 @@ def merge(api, dst_site, src_site=None, file_name=None, categories=None):
         print("Merging file '%s' onto site '%s'..." % (file_name, dst_site))
         with open(file_name, 'r') as f:
             data = json.loads(f.read())
+
+    OVERWRITE_TEMPLATED_RULES = overwrite_templated_rules
 
     merges(api, dst_site, data, categories)
