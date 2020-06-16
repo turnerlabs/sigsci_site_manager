@@ -2,6 +2,7 @@ import argparse
 import fnmatch
 from getpass import getpass
 import os
+from pprint import pprint
 
 from sigsci_site_manager.api import init_api
 from sigsci_site_manager.backup import backup
@@ -94,6 +95,33 @@ def do_merge(args):
                   build_category_list(args.include, args.exclude))
 
 
+def do_list_users(args):
+    api = init_api(args.username, args.password, args.token, args.corp,
+                   args.dry_run)
+    if args.site_name:
+        api.site = args.site_name
+        users = api.get_site_members()
+    else:
+        users = api.get_corp_users()
+
+    cols = ['email', 'role', 'status', 'name']
+    colFormat = "%-45s %-10s %-10s %-30s"
+    if users:
+        if args.site_name:
+            print('Site: %s' % args.site_name)
+            print(colFormat % (cols[0], 'site-' + cols[1],
+                               cols[2], cols[3]))
+            for user in users['data']:
+                print(colFormat % (user['user'][cols[0]], user[cols[1]],
+                                   user['user'][cols[2]], user['user'][cols[3]]))
+        else:
+            print(colFormat % (cols[0], 'corp-' + cols[1],
+                               cols[2], cols[3]))
+            for user in users['data']:
+                print(colFormat % (user[cols[0]], user[cols[1]],
+                                   user[cols[2]], user[cols[3]]))
+
+
 def do_validate(args):
     api = init_api(args.username, args.password, args.token, args.corp,
                    args.dry_run)
@@ -141,43 +169,43 @@ def get_args():
 
     # Users command arguments
     user_parser = subparsers.add_parser('user', help='Manage users')
-    user_parser.add_argument('--site', '-s', metavar='SITE', 
-            required=False,
-            dest='site_name',
-            help='Name of site')
+    user_parser.set_defaults(func=do_list_users)
+    user_parser.add_argument('--site', '-s', metavar='SITE',
+                             required=False,
+                             dest='site_name',
+                             help='Name of site')
     user_parser.add_argument('--dry-run', action='store_true',
-            required=False,
-            dest='dry_run',
-            help='Print actions without making any changes')
+                             required=False,
+                             dest='dry_run',
+                             help='Print actions without making any changes')
     add_user_group = user_parser.add_argument_group('add user')
     add_user_group.add_argument('--id', '-i',
-            required=False,
-            dest='email_id',
-            help='User to add to site')
+                                required=False,
+                                dest='email_id',
+                                help='User to add to site')
     add_user_group.add_argument('--role', '-r',
-            required=False,
-            dest='role_name',
-            help='Role to assign user in site')
+                                required=False,
+                                dest='role_name',
+                                help='Role to assign user in site')
     add_user_group.add_argument('--force', '-f',
-            required=False,
-            action='store_true', dest='force',
-            help='Force assignment of role.' +
-                'Enables upgrading or degrading role')
+                                required=False,
+                                action='store_true', dest='force',
+                                help='Force assignment of role.' +
+                                'Enables upgrading or degrading role')
 
     member_user_group = user_parser.add_argument_group('list user membership')
     member_user_group.add_argument('--target-id', '-t',
-            required=False,
-            dest='email_id',
-            help='Email id for the user to examine site/corp membership.')
+                                   required=False,
+                                   dest='email_id',
+                                   help='Email id for the user to examine site/corp membership.')
 
     del_user_group = user_parser.add_argument_group('delete user')
     del_user_group.add_argument('--email-id', '-e',
-            required=False,
-            dest='email_id',
-            help='Email id for the user to delete. ' +
-                 'Deletes role from site if site is specified, ' +
-                 ' otherwise deletes user from the system')
-    
+                                required=False,
+                                dest='email_id',
+                                help='Email id for the user to delete. ' +
+                                'Deletes role from site if site is specified, ' +
+                                ' otherwise deletes user from the system')
 
     # Deploy command arguments
     deploy_parser = subparsers.add_parser(
