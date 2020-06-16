@@ -194,9 +194,14 @@ def get_args():
                              dest='dry_run',
                              help='Print actions without making any changes')
 
-    add_user_group = user_parser.add_argument_group('add user')
+    user_sub_parser = user_parser.add_subparsers(title="Manage User Command",
+                                                 dest="user_command")
+    user_add_sub_parser = user_sub_parser.add_parser('add',
+                                                     help='Add user to corp, or to site if ' +
+                                                     'site is specified')
+    add_user_group = user_add_sub_parser.add_argument_group('add user')
     add_user_group.add_argument('--id', '-i',
-                                required=False,
+                                required=True,
                                 dest='email_id',
                                 help='User to add to site')
     add_user_group.add_argument('--role', '-r',
@@ -209,16 +214,26 @@ def get_args():
                                 help='Force assignment of role.' +
                                 'Enables upgrading or degrading role')
 
-    member_user_group = user_parser.add_argument_group('list user site/role membership')
+    user_list_sub_parser = user_sub_parser.add_parser('list',
+                                                      help='List users in corp, or in site if ' +
+                                                      'site is specified')
+    user_list_sub_parser.set_defaults(func=do_list_users)
+
+    user_member_sub_parser = user_sub_parser.add_parser('member',
+                                                      help='list user site/role membership')
+    user_member_sub_parser.set_defaults(func=do_list_membership)
+    member_user_group = user_member_sub_parser.add_argument_group('list user site/role membership')
     member_user_group.set_defaults(func=do_list_membership)
-    member_user_group.add_argument('--target-id', '-t',
-                                   required=False,
+    member_user_group.add_argument('--id', '-i',
+                                   required=True,
                                    dest='email_id',
                                    help='Email id for the user to examine site/corp membership.')
 
-    del_user_group = user_parser.add_argument_group('delete user')
-    del_user_group.add_argument('--email-id', '-e',
-                                required=False,
+    user_del_sub_parser = user_sub_parser.add_parser('remove',
+                                                      help='remove user from corp/site')
+    del_user_group = user_del_sub_parser.add_argument_group('delete user')
+    del_user_group.add_argument('--id', '-i',
+                                required=True,
                                 dest='email_id',
                                 help='Email id for the user to delete. ' +
                                 'Deletes role from site if site is specified, ' +
