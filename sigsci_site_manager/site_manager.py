@@ -139,6 +139,46 @@ def get_args():
                              default='*',
                              help='Filter site names using a wildcard pattern')
 
+    # Users command arguments
+    user_parser = subparsers.add_parser('user', help='Manage users')
+    user_parser.add_argument('--site', '-s', metavar='SITE', 
+            required=False,
+            dest='site_name',
+            help='Name of site')
+    user_parser.add_argument('--dry-run', action='store_true',
+            required=False,
+            dest='dry_run',
+            help='Print actions without making any changes')
+    add_user_group = user_parser.add_argument_group('add user')
+    add_user_group.add_argument('--id', '-i',
+            required=False,
+            dest='email_id',
+            help='User to add to site')
+    add_user_group.add_argument('--role', '-r',
+            required=False,
+            dest='role_name',
+            help='Role to assign user in site')
+    add_user_group.add_argument('--force', '-f',
+            required=False,
+            action='store_true', dest='force',
+            help='Force assignment of role.' +
+                'Enables upgrading or degrading role')
+
+    member_user_group = user_parser.add_argument_group('list user membership')
+    member_user_group.add_argument('--target-id', '-t',
+            required=False,
+            dest='email_id',
+            help='Email id for the user to examine site/corp membership.')
+
+    del_user_group = user_parser.add_argument_group('delete user')
+    del_user_group.add_argument('--email-id', '-e',
+            required=False,
+            dest='email_id',
+            help='Email id for the user to delete. ' +
+                 'Deletes role from site if site is specified, ' +
+                 ' otherwise deletes user from the system')
+    
+
     # Deploy command arguments
     deploy_parser = subparsers.add_parser(
         'deploy', help='Deploy a new site from a file')
