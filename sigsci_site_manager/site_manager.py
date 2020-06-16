@@ -122,6 +122,21 @@ def do_list_users(args):
                                    user[cols[2]], user[cols[3]]))
 
 
+def do_list_membership(args):
+    api = init_api(args.username, args.password, args.token, args.corp,
+                   args.dry_run)
+    if args.email_id:
+        memberships = api.get_memberships(args.email_id)
+        cols = ['role', 'site']
+        colFormat = "%-10s %s"
+        if memberships:
+            print(colFormat % (cols[0], cols[1]))
+            for member in memberships['data']:
+                print(colFormat % (member[cols[0]],
+                                   "%s [%s]" % (member[cols[1]]['displayName'],
+                                                member[cols[1]]['name'])))
+
+
 def do_validate(args):
     api = init_api(args.username, args.password, args.token, args.corp,
                    args.dry_run)
@@ -178,6 +193,7 @@ def get_args():
                              required=False,
                              dest='dry_run',
                              help='Print actions without making any changes')
+
     add_user_group = user_parser.add_argument_group('add user')
     add_user_group.add_argument('--id', '-i',
                                 required=False,
@@ -193,7 +209,8 @@ def get_args():
                                 help='Force assignment of role.' +
                                 'Enables upgrading or degrading role')
 
-    member_user_group = user_parser.add_argument_group('list user membership')
+    member_user_group = user_parser.add_argument_group('list user site/role membership')
+    member_user_group.set_defaults(func=do_list_membership)
     member_user_group.add_argument('--target-id', '-t',
                                    required=False,
                                    dest='email_id',
