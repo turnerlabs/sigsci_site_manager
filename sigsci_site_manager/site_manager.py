@@ -114,7 +114,7 @@ def do_list_users(args):
             line_entries = []
             for user in users['data']:
                 line_entries.append(colFormat % (user['user'][cols[0]], user[cols[1]],
-                                   user['user'][cols[2]], user['user'][cols[3]]))
+                                                 user['user'][cols[2]], user['user'][cols[3]]))
             print_sorted_array(line_entries)
         else:
             print(colFormat % (cols[0], 'corp-' + cols[1],
@@ -122,7 +122,7 @@ def do_list_users(args):
             line_entries = []
             for user in users['data']:
                 line_entries.append(colFormat % (user[cols[0]], user[cols[1]],
-                                   user[cols[2]], user[cols[3]]))
+                                                 user[cols[2]], user[cols[3]]))
             print_sorted_array(line_entries)
 
 
@@ -138,9 +138,10 @@ def do_list_membership(args):
             print(colFormat % (cols[0], cols[1]))
             for member in memberships['data']:
                 line_entries.append(colFormat % (member[cols[0]],
-                                   "%s [%s]" % (member[cols[1]]['displayName'],
-                                                member[cols[1]]['name'])))
+                                                 "%s [%s]" % (member[cols[1]]['displayName'],
+                                                              member[cols[1]]['name'])))
             print_sorted_array(line_entries)
+
 
 def do_remove_user(args):
     api = init_api(args.username, args.password, args.token, args.corp,
@@ -149,20 +150,51 @@ def do_remove_user(args):
         location_string = 'corp'
         if args.site_name:
             location_string = args.site_name
-        print("Deleting %s from %s" % (args.email_id, location_string))
+            if args.email_id:
+                print("Deleting %s from %s" % (args.email_id, location_string))
+            if args.file_name:
+                entries = 0
+                with open(args.file_name, 'r') as f:
+                    line = f.readline()
+                    while line:
+                        print("Deleting %s from %s" % (line, location_string))
+                        entries += 1
+                        line = f.readline()
+                print("Processed %d entries" % entries)
     else:
-        if args.email_id:
-            if args.site_name:
-                api.site = args.site_name
+        if args.site_name:
+            api.site = args.site_name
+            if args.email_id:
                 api.delete_site_member(args.email_id)
-            else:
+            if args.file_name:
+                entries = 0
+                with open(args.file_name, 'r') as f:
+                    line = f.readline()
+                    while line:
+                        api.delete_site_member(line)
+                        entries += 1
+                        line = f.readline()
+                print("Processed %d entries" % entries)
+
+        else:
+            if args.email_id:
                 api.delete_corp_user(args.email_id)
+            if args.file_name:
+                entries = 0
+                with open(args.file_name, 'r') as f:
+                    line = f.readline()
+                    while line:
+                        api.delete_corp_user(line)
+                        entries += 1
+                        line = f.readline()
+                print("Processed %d entries" % entries)
 
 
 def do_validate(args):
     api = init_api(args.username, args.password, args.token, args.corp,
                    args.dry_run)
     validate(api, args.site_name, args.target, args.dry_run)
+
 
 def print_sorted_array(arg_list):
     if isinstance(arg_list, list):
@@ -224,6 +256,7 @@ def get_args():
 
     user_sub_parser = user_parser.add_subparsers(title="Manage User Command",
                                                  dest="user_command")
+    # add user subcommand
     user_add_sub_parser = user_sub_parser.add_parser('add',
                                                      help='Add user to corp, or to site if ' +
                                                      'site is specified')
@@ -242,11 +275,13 @@ def get_args():
                                 help='Force assignment of role.' +
                                 'Enables upgrading or degrading role')
 
+    # list user subcommand
     user_list_sub_parser = user_sub_parser.add_parser('list',
                                                       help='List users in corp, or in site if ' +
                                                       'site is specified')
     user_list_sub_parser.set_defaults(func=do_list_users)
 
+    # user membership subcommand
     user_member_sub_parser = user_sub_parser.add_parser('member',
                                                         help='list user site/role membership')
     user_member_sub_parser.set_defaults(func=do_list_membership)
@@ -257,15 +292,22 @@ def get_args():
                                    dest='email_id',
                                    help='Email id for the user to examine site/corp membership.')
 
+    # remove user subcommand
     user_del_sub_parser = user_sub_parser.add_parser('remove',
                                                      help='remove user from corp/site')
     user_del_sub_parser.set_defaults(func=do_remove_user)
-    del_user_group = user_del_sub_parser.add_argument_group('delete user')
+    del_user_group = user_del_sub_parser.add_mutually_exclusive_group()
     del_user_group.add_argument('--id', '-i',
-                                required=True,
+                                required=False,
                                 dest='email_id',
                                 help='Email id for the user to delete. ' +
-                                'Deletes role from site if site is specified, ' +
+                                'Deletes user from site if site is specified, ' +
+                                ' otherwise deletes user from the system')
+    del_user_group.add_argument('--file', '-f',
+                                required=False,
+                                dest='file_name', metavar='FILENAME',
+                                help='Path to file containing, email_id one per line.' +
+                                'Deletes user from site if site is specified, ' +
                                 ' otherwise deletes user from the system')
 
     # Deploy command arguments
