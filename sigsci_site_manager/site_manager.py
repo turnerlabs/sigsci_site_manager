@@ -1,9 +1,11 @@
 import argparse
 import fnmatch
-from getpass import getpass
 import os
-from pprint import pprint
+import sys
+from getpass import getpass
 
+
+from sigsci_site_manager.__version__ import __version__
 from sigsci_site_manager.api import init_api
 from sigsci_site_manager.backup import backup
 from sigsci_site_manager.clone import clone
@@ -12,7 +14,6 @@ from sigsci_site_manager.deploy import deploy
 from sigsci_site_manager.merge import merge
 from sigsci_site_manager.util import build_category_list
 from sigsci_site_manager.validate import validate
-from sigsci_site_manager.__version__ import __version__
 
 
 def do_list(args):
@@ -143,57 +144,139 @@ def do_list_membership(args):
             print_sorted_array(line_entries)
 
 
+def do_add_user(args):
+    api = init_api(args.username, args.password, args.token, args.corp,
+                   args.dry_run)
+
+    input_file = resolve_input_file(args.file_name)
+    location_string = 'corp'
+    if args.site_name:
+        api.site = args.site_name
+        location_string = args.site_name
+
+    if args.email_id:
+        data = resolve_user_data_role(args.role_name)
+        if args.force:
+            do_purge_user_if_different_role(api, args)
+        if args.dry_run:
+            print("Adding %s to %s with %s role" %
+                  (args.email_id, location_string, data['role']))
+        else:
+            if args.site_name:
+                api.add_site_member(args.email_id, data)
+            else:
+                api.add_corp_user(args.email_id, data)
+    if input_file:
+        entries = 0
+        with open_file_for_read(input_file) as f:
+            line = f.readline()
+            while line:
+                cols = line.split(",")
+                if len(cols) == 2:
+                    data = resolve_user_data_role(cols[1])
+                    if args.force:
+                        args.role_name = cols[1]
+                        args.email_id = cols[0]
+                        do_purge_user_if_different_role(api, args)
+
+                    if args.dry_run:
+                        print("Adding %s to %s with %s role" %
+                              (cols[0].strip(), location_string, data['role']))
+                    else:
+                        if args.site_name:
+                            api.add_site_member(line.strip(), data)
+                        else:
+                            api.add_corp_user(line.strip(), data)
+                    entries += 1
+                line = f.readline()
+        print("Processed %d entries" % entries)
+
+
 def do_remove_user(args):
     api = init_api(args.username, args.password, args.token, args.corp,
                    args.dry_run)
-    if args.dry_run:
-        location_string = 'corp'
-        if args.site_name:
-            location_string = args.site_name
-            if args.email_id:
-                print("Deleting %s from %s" % (args.email_id, location_string))
-            if args.file_name:
-                entries = 0
-                with open(args.file_name, 'r') as f:
-                    line = f.readline()
-                    while line:
-                        print("Deleting %s from %s" % (line, location_string))
-                        entries += 1
-                        line = f.readline()
-                print("Processed %d entries" % entries)
-    else:
-        if args.site_name:
-            api.site = args.site_name
-            if args.email_id:
-                api.delete_site_member(args.email_id)
-            if args.file_name:
-                entries = 0
-                with open(args.file_name, 'r') as f:
-                    line = f.readline()
-                    while line:
-                        api.delete_site_member(line)
-                        entries += 1
-                        line = f.readline()
-                print("Processed %d entries" % entries)
 
+    input_file = resolve_input_file(args.file_name)
+    location_string = 'corp'
+    if args.site_name:
+        api.site = args.site_name
+        location_string = args.site_name
+
+    if args.email_id:
+        if args.dry_run:
+            print("Deleting %s from %s" % (args.email_id, location_string))
         else:
-            if args.email_id:
+            if args.site_name:
+                api.delete_site_member(args.email_id)
+            else:
                 api.delete_corp_user(args.email_id)
-            if args.file_name:
-                entries = 0
-                with open(args.file_name, 'r') as f:
-                    line = f.readline()
-                    while line:
-                        api.delete_corp_user(line)
-                        entries += 1
-                        line = f.readline()
-                print("Processed %d entries" % entries)
+    if input_file:
+        entries = 0
+        with open_file_for_read(input_file) as f:
+            line = f.readline()
+            while line:
+                if args.dry_run:
+                    print("Deleting %s from %s" %
+                          (line.strip(), location_string))
+                else:
+                    if args.site_name:
+                        api.delete_site_member(line.strip())
+                    else:
+                        api.delete_corp_user(line.strip())
+                entries += 1
+                line = f.readline()
+        print("Processed %d entries" % entries)
 
 
 def do_validate(args):
     api = init_api(args.username, args.password, args.token, args.corp,
                    args.dry_run)
     validate(api, args.site_name, args.target, args.dry_run)
+
+
+def do_purge_user_if_different_role(api, args):
+    user = None
+    site_location = 'corp'
+    
+    if args.email_id:
+        if args.site_name:
+            api.site = args.site_name
+            site_location = args.site_name
+            user = api.get_site_member(args.email_id)
+        else:
+            user = api.get_corp_user(args.email_id)
+        
+        if user['role'] != args.role_name:
+            if args.dry_run:
+                print("Deleting %s from %s with %s role" %
+                      (args.email_id, site_location, user['role']))
+            else:
+                if args.site_name:
+                    api.delete_site_member(args.email_id)
+                else:
+                    api.delete_corp_user(args.email_id)
+
+
+def resolve_user_data_role(user_role):
+    valid_roles = ['admin', 'user', 'observer', 'owner']
+    data = {'role': 'observer'}
+    if user_role in valid_roles:
+        data['role'] = user_role
+
+    return data
+
+
+def resolve_input_file(file_arg):
+    if file_arg and file_arg == '-':
+        return sys.stdin
+
+    return file_arg
+
+
+def open_file_for_read(file_arg):
+    if isinstance(file_arg, str):
+        return open(file_arg, 'r')
+    return file_arg
 
 
 def print_sorted_array(arg_list):
@@ -203,45 +286,7 @@ def print_sorted_array(arg_list):
             print(arg)
 
 
-def get_args():
-
-    def _validate_category_list(value: str):
-        value_list = value.upper().split(',')
-        for item in value_list:
-            if item not in CATEGORIES:
-                raise argparse.ArgumentTypeError(
-                    '%s is not a valid category %s' % (item, CATEGORIES))
-        return value_list
-
-    # Top-level arguments
-    parser = argparse.ArgumentParser(
-        description='Signal Sciences site management %s' % __version__)
-    subparsers = parser.add_subparsers(title='Commands', dest='command')
-    subparsers.required = True
-    parser.add_argument('--corp', '-c', metavar='CORP', dest='corp',
-                        help='Signal Sciences corp name. If omitted will try '
-                             'to use value in $SIGSCI_CORP.')
-    parser.add_argument('--user', '-u', metavar='USERNAME', nargs='?',
-                        dest='username', const='',
-                        help='Signal Sciences username. If omitted will try '
-                             'to use value in $SIGSCI_EMAIL.')
-    pw_group = parser.add_mutually_exclusive_group()
-    pw_group.add_argument('--password', '-p', metavar='PASSWORD', nargs='?',
-                          dest='password', const='',
-                          help='Signal Sciences password. If omitted will try '
-                               'to use value in $SIGSCI_PASSWORD')
-    pw_group.add_argument('--token', '-t', metavar='APITOKEN', nargs='?',
-                          dest='token', const='',
-                          help='Signal Sciences API token. If omitted will '
-                               'try to use value in $SIGSCI_API_TOKEN')
-
-    # List command arguments
-    list_parser = subparsers.add_parser('list', help='List sites')
-    list_parser.set_defaults(func=do_list)
-    list_parser.add_argument('--filter', metavar='PATTERN', required=False,
-                             default='*',
-                             help='Filter site names using a wildcard pattern')
-
+def parse_user_command(subparsers):
     # Users command arguments
     user_parser = subparsers.add_parser('user', help='Manage users')
     user_parser.set_defaults(func=do_list_users)
@@ -260,16 +305,26 @@ def get_args():
     user_add_sub_parser = user_sub_parser.add_parser('add',
                                                      help='Add user to corp, or to site if ' +
                                                      'site is specified')
+    user_add_sub_parser.set_defaults(func=do_add_user)
     add_user_group = user_add_sub_parser.add_argument_group('add user')
-    add_user_group.add_argument('--id', '-i',
-                                required=True,
-                                dest='email_id',
-                                help='User to add to site')
+    add_mx_user_group = user_add_sub_parser.add_mutually_exclusive_group()
+    add_mx_user_group.add_argument('--id', '-i',
+                                   required=False,
+                                   dest='email_id',
+                                   help='User to add to site')
+    add_mx_user_group.add_argument('--file', '-f',
+                                   required=False,
+                                   dest='file_name', metavar='FILENAME',
+                                   help='Path to file containing, email_id,role pair one per line.' +
+                                   'Adds each user to site if site is specified, ' +
+                                   ' otherwise adds user from the corp org.' +
+                                   'Use - to read input from stdin')
     add_user_group.add_argument('--role', '-r',
                                 required=False,
+                                choices=['admin', 'user', 'observer', 'owner'],
                                 dest='role_name',
-                                help='Role to assign user in site')
-    add_user_group.add_argument('--force', '-f',
+                                help='Role to assign user in site. Default role is observer')
+    add_user_group.add_argument('--override', '-o',
                                 required=False,
                                 action='store_true', dest='force',
                                 help='Force assignment of role.' +
@@ -308,8 +363,11 @@ def get_args():
                                 dest='file_name', metavar='FILENAME',
                                 help='Path to file containing, email_id one per line.' +
                                 'Deletes user from site if site is specified, ' +
-                                ' otherwise deletes user from the system')
+                                ' otherwise deletes user from the system.' +
+                                'Use - to read input from stdin')
 
+
+def parse_deploy_command(subparsers):
     # Deploy command arguments
     deploy_parser = subparsers.add_parser(
         'deploy', help='Deploy a new site from a file')
@@ -337,6 +395,49 @@ def get_args():
         type=_validate_category_list, help=(
             'CSV list of categories to exclude in the merge. Options: %s' %
             ', '.join(CATEGORIES)))
+
+
+def _validate_category_list(value: str):
+    value_list = value.upper().split(',')
+    for item in value_list:
+        if item not in CATEGORIES:
+            raise argparse.ArgumentTypeError(
+                '%s is not a valid category %s' % (item, CATEGORIES))
+    return value_list
+
+
+def get_args():
+    # Top-level arguments
+    parser = argparse.ArgumentParser(
+        description='Signal Sciences site management %s' % __version__)
+    subparsers = parser.add_subparsers(title='Commands', dest='command')
+    subparsers.required = True
+    parser.add_argument('--corp', '-c', metavar='CORP', dest='corp',
+                        help='Signal Sciences corp name. If omitted will try '
+                             'to use value in $SIGSCI_CORP.')
+    parser.add_argument('--user', '-u', metavar='USERNAME', nargs='?',
+                        dest='username', const='',
+                        help='Signal Sciences username. If omitted will try '
+                             'to use value in $SIGSCI_EMAIL.')
+    pw_group = parser.add_mutually_exclusive_group()
+    pw_group.add_argument('--password', '-p', metavar='PASSWORD', nargs='?',
+                          dest='password', const='',
+                          help='Signal Sciences password. If omitted will try '
+                               'to use value in $SIGSCI_PASSWORD')
+    pw_group.add_argument('--token', '-t', metavar='APITOKEN', nargs='?',
+                          dest='token', const='',
+                          help='Signal Sciences API token. If omitted will '
+                               'try to use value in $SIGSCI_API_TOKEN')
+
+    # List command arguments
+    list_parser = subparsers.add_parser('list', help='List sites')
+    list_parser.set_defaults(func=do_list)
+    list_parser.add_argument('--filter', metavar='PATTERN', required=False,
+                             default='*',
+                             help='Filter site names using a wildcard pattern')
+
+    # Deploy command arguments
+    parse_deploy_command(subparsers)
 
     # Backup command arguments
     backup_parser = subparsers.add_parser('backup',
@@ -416,6 +517,9 @@ def get_args():
     validate_parser.add_argument(
         '--dry-run', required=False, action='store_true', dest='dry_run',
         help='Print actions without making any changes')
+
+    # users command
+    parse_user_command(subparsers)
 
     # Return the parsed arguments
     return parser.parse_args()
