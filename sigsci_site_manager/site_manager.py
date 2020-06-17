@@ -111,15 +111,19 @@ def do_list_users(args):
             print('Site: %s' % args.site_name)
             print(colFormat % (cols[0], 'site-' + cols[1],
                                cols[2], cols[3]))
+            line_entries = []
             for user in users['data']:
-                print(colFormat % (user['user'][cols[0]], user[cols[1]],
+                line_entries.append(colFormat % (user['user'][cols[0]], user[cols[1]],
                                    user['user'][cols[2]], user['user'][cols[3]]))
+            print_sorted_array(line_entries)
         else:
             print(colFormat % (cols[0], 'corp-' + cols[1],
                                cols[2], cols[3]))
+            line_entries = []
             for user in users['data']:
-                print(colFormat % (user[cols[0]], user[cols[1]],
+                line_entries.append(colFormat % (user[cols[0]], user[cols[1]],
                                    user[cols[2]], user[cols[3]]))
+            print_sorted_array(line_entries)
 
 
 def do_list_membership(args):
@@ -130,17 +134,41 @@ def do_list_membership(args):
         cols = ['role', 'site']
         colFormat = "%-10s %s"
         if memberships:
+            line_entries = []
             print(colFormat % (cols[0], cols[1]))
             for member in memberships['data']:
-                print(colFormat % (member[cols[0]],
+                line_entries.append(colFormat % (member[cols[0]],
                                    "%s [%s]" % (member[cols[1]]['displayName'],
                                                 member[cols[1]]['name'])))
+            print_sorted_array(line_entries)
+
+def do_remove_user(args):
+    api = init_api(args.username, args.password, args.token, args.corp,
+                   args.dry_run)
+    if args.dry_run:
+        location_string = 'corp'
+        if args.site_name:
+            location_string = args.site_name
+        print("Deleting %s from %s" % (args.email_id, location_string))
+    else:
+        if args.email_id:
+            if args.site_name:
+                api.site = args.site_name
+                api.delete_site_member(args.email_id)
+            else:
+                api.delete_corp_user(args.email_id)
 
 
 def do_validate(args):
     api = init_api(args.username, args.password, args.token, args.corp,
                    args.dry_run)
     validate(api, args.site_name, args.target, args.dry_run)
+
+def print_sorted_array(arg_list):
+    if isinstance(arg_list, list):
+        arg_list.sort()
+        for arg in arg_list:
+            print(arg)
 
 
 def get_args():
@@ -220,17 +248,18 @@ def get_args():
     user_list_sub_parser.set_defaults(func=do_list_users)
 
     user_member_sub_parser = user_sub_parser.add_parser('member',
-                                                      help='list user site/role membership')
+                                                        help='list user site/role membership')
     user_member_sub_parser.set_defaults(func=do_list_membership)
-    member_user_group = user_member_sub_parser.add_argument_group('list user site/role membership')
-    member_user_group.set_defaults(func=do_list_membership)
+    member_user_group = user_member_sub_parser.add_argument_group(
+        'list user site/role membership')
     member_user_group.add_argument('--id', '-i',
                                    required=True,
                                    dest='email_id',
                                    help='Email id for the user to examine site/corp membership.')
 
     user_del_sub_parser = user_sub_parser.add_parser('remove',
-                                                      help='remove user from corp/site')
+                                                     help='remove user from corp/site')
+    user_del_sub_parser.set_defaults(func=do_remove_user)
     del_user_group = user_del_sub_parser.add_argument_group('delete user')
     del_user_group.add_argument('--id', '-i',
                                 required=True,
