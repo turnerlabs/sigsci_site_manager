@@ -98,8 +98,7 @@ def add_site_members(api, data):
         else:
             # User exists in corp and is not an owner to add it to the site
             print('  %s' % item['user']['email'])
-            role = {'role': item['role']}
-            api.update_site_member(item['user']['email'], role)
+            api.add_members_to_site({"members": [item['user']['email']]})
 
 
 def create_integrations(api, data):
@@ -112,12 +111,25 @@ def create_integrations(api, data):
             print('    Failed: %s' % e)
 
 
-def generate_advanced_rules_request(api, source, data):
-    print('\n\nEmail support@signalsciences.com with the following...\n')
-    print('Please copy the following advanced rules from %s/%s to %s/%s:' %
-          (source['corp'], source['site'], api.corp, api.site))
+def create_advanced_rules(api, source, data):
+    print('Creating advanced rules...')
     for item in data:
-        print('    %s (ID %s)' % (item['shortName'], item['id']))
+        if '+' in item['shortName']:
+            print("    Warning for %s: Rule names containing '+' not supported."
+                  % item['shortName'])
+        try:
+            response = api.copy_advanced_rule(item['shortName'],
+                                              source['site']) or item
+            # if response is None:
+            #     response = item
+            print('  %s (ID %s)' % (response['shortName'], response['id']))
+        except KeyError:
+            print('    Failed on %s: %s' % (item['shortName'],
+                                            response['message']))
+        except Exception as e:  # pylint: disable=broad-except
+            print('    Failed on %s: %s' % (item['shortName'], e))
+
+
 
 
 def deploys(api, site_name, data, display_name, categories):
@@ -167,7 +179,7 @@ def deploys(api, site_name, data, display_name, categories):
         create_integrations, (api, data['integrations'])
     )
     steps[ADVANCED_RULES] = (
-        generate_advanced_rules_request,
+        create_advanced_rules,
         (api, data['source'], data['advanced_rules'])
     )
 
