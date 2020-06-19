@@ -165,7 +165,7 @@ def merge_signal_rules(api, data):
 
 
 def merge_templated_rules(api, data):
-    print('Mergiong templated rules...')
+    print('Merging templated rules...')
 
     # Get existing templated rules. We also only care about the names of
     # configured rules because we're going to skip any configured templated

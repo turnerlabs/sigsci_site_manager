@@ -120,8 +120,6 @@ def create_advanced_rules(api, source, data):
         try:
             response = api.copy_advanced_rule(item['shortName'],
                                               source['site']) or item
-            # if response is None:
-            #     response = item
             print('  %s (ID %s)' % (response['shortName'], response['id']))
         except KeyError:
             print('    Failed on %s: %s' % (item['shortName'],
