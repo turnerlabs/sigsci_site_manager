@@ -57,12 +57,12 @@ def test_merge_category_include():
 
 def test_deploy_category_include():
     # With SITE_MEMBERS included the only step is merging the integrations.
-    # Since DummyAPI does not have a update_site_member method this should
+    # Since DummyAPI does not have a add_members_to_site method this should
     # be the exception raised rather than one about there being no
     # get_rule_lists()
     categories = [consts.SITE_MEMBERS]
     with pytest.raises(AttributeError,
-                       match="object has no attribute 'update_site_member'"):
+                       match="object has no attribute 'add_members_to_site'"):
         deploy.deploys(API, 'dummy1', DATA, 'dummy', categories)
 
 
