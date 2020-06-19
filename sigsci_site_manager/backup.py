@@ -31,10 +31,7 @@ def get_custom_signals(api):
 def get_signal_rules(api):
     keys = ['enabled', 'signal', 'groupOperator', 'conditions', 'reason']
     data = api.get_signal_rules()
-    try:
-        return filter_data(data['data'], keys)
-    except KeyError:
-        return {}, []
+    return filter_data(data['data'], keys)
 
 
 def get_templated_rules(api):

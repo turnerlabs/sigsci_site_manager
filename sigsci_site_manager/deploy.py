@@ -113,21 +113,20 @@ def create_integrations(api, data):
 
 def create_advanced_rules(api, source, data):
     print('Creating advanced rules...')
+    not_copied = []
     for item in data:
-        if '+' in item['shortName']:
-            print("    Warning for %s: Rule names containing '+' not supported."
-                  % item['shortName'])
         try:
             response = api.copy_advanced_rule(item['shortName'],
                                               source['site']) or item
             print('  %s (ID %s)' % (response['shortName'], response['id']))
-        except KeyError:
-            print('    Failed on %s: %s' % (item['shortName'],
-                                            response['message']))
         except Exception as e:  # pylint: disable=broad-except
-            print('    Failed on %s: %s' % (item['shortName'], e))
-
-
+            not_copied.append(item)
+    if not_copied:
+        print('\nEmail support@signalsciences.com with the following...\n'
+              'Please copy the following advanced rules from %s/%s to %s/%s:' %
+              (source['corp'], source['site'], api.corp, api.site))
+        for item in not_copied:
+            print('    %s (ID %s)' % (item['shortName'], item['id']))
 
 
 def deploys(api, site_name, data, display_name, categories):

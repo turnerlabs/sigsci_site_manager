@@ -303,23 +303,25 @@ def merge_advanced_rules(api, source, data):
     src = api.get_advanced_rules()
     rules = filter_data(src.get('data', []), ['shortName'])
     rule_names = [r['shortName'] for r in rules]
+    not_copied = []
     for item in data:
         if item['shortName'] not in rule_names:
-            if '+' in item['shortName']:
-                print("    Warning for %s: Rule names containing '+' not supported."
-                      % item['shortName'])
             try:
                 response = api.copy_advanced_rule(item['shortName'],
                                                   source['site']) or item
                 print('  Adding %s (ID %s)' % (response['shortName'],
                                                response['id']))
-            except KeyError:
-                print('    Failed on %s: %s' % (item['shortName'],
-                                                response['message']))
             except Exception as e:  # pylint: disable=broad-except
-                print('    Failed on %s: %s' % (item['shortName'], e))
+                not_copied.append(item)
         else:
             print('  Skipping %s (exists)' % item)
+    if not_copied:
+        print('\nEmail support@signalsciences.com with the following...\n'
+              'Please copy the following advanced rules from %s/%s to %s/%s:' %
+              (source['corp'], source['site'], api.corp, api.site))
+        for item in not_copied:
+            print('    %s (ID %s)' % (item['shortName'], item['id']))
+
 
 
 
