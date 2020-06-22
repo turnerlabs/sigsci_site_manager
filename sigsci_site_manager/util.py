@@ -7,6 +7,8 @@ def filter_data(data, keys):
         for item in data:
             # Only save the data required by the create API
             ret.append({k: item[k] for k in keys})
+    elif data is None:
+        ret = {}
     else:
         ret = {k: data[k] for k in keys}
     return ret

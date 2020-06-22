@@ -262,7 +262,7 @@ def merge_site_members(api, data):
                 # Add missing user
                 print('  Adding %s' % item['user']['email'])
                 role = {'role': item['role']}
-                api.update_site_member(item['user']['email'], role)
+                api.add_members_to_site({"members": [item['user']['email']]})
 
 
 def merge_integrations(api, data):
@@ -296,31 +296,33 @@ def merge_integrations(api, data):
                 print('    Failed: %s' % e)
 
 
-def generate_advanced_rules_request(api, source, data):
+def merge_advanced_rules(api, source, data):
     print('Merging advanced rules...')
 
     # Get the existing advanced rules
     src = api.get_advanced_rules()
     rules = filter_data(src.get('data', []), ['shortName'])
     rule_names = [r['shortName'] for r in rules]
-
-    email = '\nEmail support@signalsciences.com with the following...\n'
-    email += ('Please copy the following advanced rules from %s/%s to %s/%s:' %
-              (source['corp'], source['site'], api.corp, api.site))
-    make_request = False
-    skipped = []
+    not_copied = []
     for item in data:
         if item['shortName'] not in rule_names:
-            email += '\n    %s (ID %s)' % (item['shortName'], item['id'])
-            make_request = True
+            try:
+                response = api.copy_advanced_rule(item['shortName'],
+                                                  source['site']) or item
+                print('  Adding %s (ID %s)' % (response['shortName'],
+                                               response['id']))
+            except Exception as e:  # pylint: disable=broad-except
+                not_copied.append(item)
         else:
-            skipped.append(item['shortName'])
+            print('  Skipping %s (exists)' % item)
+    if not_copied:
+        print('\nEmail support@signalsciences.com with the following...\n'
+              'Please copy the following advanced rules from %s/%s to %s/%s:' %
+              (source['corp'], source['site'], api.corp, api.site))
+        for item in not_copied:
+            print('    %s (ID %s)' % (item['shortName'], item['id']))
 
-    for item in skipped:
-        print('  Skipping %s (exists)' % item)
 
-    if make_request:
-        print(email)
 
 
 def merges(api, site_name, data, categories):
@@ -363,7 +365,7 @@ def merges(api, site_name, data, categories):
         merge_integrations, (api, data['integrations'])
     )
     steps[ADVANCED_RULES] = (
-        generate_advanced_rules_request,
+        merge_advanced_rules,
         (api, data['source'], data['advanced_rules'])
     )
 

@@ -98,8 +98,7 @@ def add_site_members(api, data):
         else:
             # User exists in corp and is not an owner to add it to the site
             print('  %s' % item['user']['email'])
-            role = {'role': item['role']}
-            api.update_site_member(item['user']['email'], role)
+            api.add_members_to_site({"members": [item['user']['email']]})
 
 
 def create_integrations(api, data):
@@ -112,12 +111,22 @@ def create_integrations(api, data):
             print('    Failed: %s' % e)
 
 
-def generate_advanced_rules_request(api, source, data):
-    print('\n\nEmail support@signalsciences.com with the following...\n')
-    print('Please copy the following advanced rules from %s/%s to %s/%s:' %
-          (source['corp'], source['site'], api.corp, api.site))
+def create_advanced_rules(api, source, data):
+    print('Creating advanced rules...')
+    not_copied = []
     for item in data:
-        print('    %s (ID %s)' % (item['shortName'], item['id']))
+        try:
+            response = api.copy_advanced_rule(item['shortName'],
+                                              source['site']) or item
+            print('  %s (ID %s)' % (response['shortName'], response['id']))
+        except Exception as e:  # pylint: disable=broad-except
+            not_copied.append(item)
+    if not_copied:
+        print('\nEmail support@signalsciences.com with the following...\n'
+              'Please copy the following advanced rules from %s/%s to %s/%s:' %
+              (source['corp'], source['site'], api.corp, api.site))
+        for item in not_copied:
+            print('    %s (ID %s)' % (item['shortName'], item['id']))
 
 
 def deploys(api, site_name, data, display_name, categories):
@@ -167,7 +176,7 @@ def deploys(api, site_name, data, display_name, categories):
         create_integrations, (api, data['integrations'])
     )
     steps[ADVANCED_RULES] = (
-        generate_advanced_rules_request,
+        create_advanced_rules,
         (api, data['source'], data['advanced_rules'])
     )
 
