@@ -70,7 +70,9 @@ def get_site_members(api):
 
 
 def get_advanced_rules(api):
-    keys = ['id', 'shortName']
+    keys = ['id', 'shortName', 'enabled', 'initRule', 'preEarlyRule',
+            'preRule', 'preLateRule', 'postEarlyRule', 'postRule',
+            'postLateRule', 'sampleRequest', 'sampleResponse']
     data = api.get_advanced_rules()
     return filter_data(data.get('data', []), keys)
 

@@ -11,6 +11,8 @@ def filter_data(data, keys, optional_keys=[]):
                 if k in item:
                     r[k] = item[k]
             ret.append(r)
+    elif data is None:
+        ret = {}
     else:
         ret = {k: data[k] for k in keys}
         for k in optional_keys:
