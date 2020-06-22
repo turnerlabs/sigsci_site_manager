@@ -100,15 +100,142 @@ def do_validate(args):
     validate(api, args.site_name, args.target, args.dry_run)
 
 
-def get_args():
+def parse_list_command(subparsers):
+    # List command arguments
+    list_parser = subparsers.add_parser('list', help='List sites')
+    list_parser.set_defaults(func=do_list)
+    list_parser.add_argument('--filter', metavar='PATTERN', required=False,
+                             default='*',
+                             help='Filter site names using a wildcard pattern')
 
-    def _validate_category_list(value: str):
-        value_list = value.upper().split(',')
-        for item in value_list:
-            if item not in CATEGORIES:
-                raise argparse.ArgumentTypeError(
-                    '%s is not a valid category %s' % (item, CATEGORIES))
-        return value_list
+
+def parse_validate_command(subparsers):
+    # Validate command arguments
+    validate_parser = subparsers.add_parser('validate',
+                                            help='Validate a site deployment')
+    validate_parser.set_defaults(func=do_validate)
+    validate_parser.add_argument('--name', '-n', metavar='NAME', required=True,
+                                 dest='site_name', help='Site name')
+    validate_parser.add_argument('--target', '-d', metavar='URL',
+                                 required=True, dest='target',
+                                 help='URL to test against')
+    validate_parser.add_argument(
+        '--dry-run', required=False, action='store_true', dest='dry_run',
+        help='Print actions without making any changes')
+
+
+def args_validate_category_list(value: str):
+    value_list = value.upper().split(',')
+    for item in value_list:
+        if item not in CATEGORIES:
+            raise argparse.ArgumentTypeError(
+                '%s is not a valid category %s' % (item, CATEGORIES))
+    return value_list
+
+
+def parse_backup_command(subparsers):
+     # Backup command arguments
+    backup_parser = subparsers.add_parser('backup',
+                                          help='Backup a site to a file')
+    backup_parser.set_defaults(func=do_backup)
+    backup_parser.add_argument('--name', '-n', metavar='NAME', required=True,
+                               dest='site_name', help='Site name')
+    backup_parser.add_argument('--out', '-o', metavar='FILENAME',
+                               required=True, dest='file_name',
+                               help='File to save backup to')
+
+
+def parse_clone_command(subparsers):
+    # Clone command arguments
+    clone_parser = subparsers.add_parser(
+        'clone', help='Clone an existing site to a new site')
+    clone_parser.set_defaults(func=do_clone)
+    clone_parser.add_argument('--src', '-s', metavar='SITE', dest='src_site',
+                              required=True, help='Site to clone from')
+    clone_parser.add_argument('--dest', '-d', metavar='SITE', dest='dst_site',
+                              required=True, help='Site to clone to')
+    clone_parser.add_argument('--display-name', '-N',
+                              metavar='"Display Name"', dest='display_name',
+                              help='Display name of the new site')
+    clone_parser.add_argument('--dry-run', required=False,
+                              action='store_true', dest='dry_run',
+                              help='Print actions without making any changes')
+    clone_cat_group = clone_parser.add_mutually_exclusive_group()
+    clone_cat_group.add_argument(
+        '--include', required=False, metavar='CATEGORY_LIST',
+        type=args_validate_category_list, help=(
+            'CSV list of categories to include in the merge. Options: %s' %
+            ', '.join(CATEGORIES)))
+    clone_cat_group.add_argument(
+        '--exclude', required=False, metavar='CATEGORY_LIST',
+        type=args_validate_category_list, help=(
+            'CSV list of categories to include in the merge. Options: %s' %
+            ', '.join(CATEGORIES)))
+
+
+def parse_deploy_command(subparsers):
+    # Deploy command arguments
+    deploy_parser = subparsers.add_parser(
+        'deploy', help='Deploy a new site from a file')
+    deploy_parser.set_defaults(func=do_deploy)
+    deploy_parser.add_argument('--name', '-n', metavar='NAME', required=True,
+                               dest='site_name',
+                               help='Identifying name of the site')
+    deploy_parser.add_argument('--display-name', '-N',
+                               metavar='"Display Name"', dest='display_name',
+                               help='Display name of the site')
+    deploy_parser.add_argument('--file', '-f', metavar='FILENAME',
+                               required=True, dest='file_name',
+                               help='Name of site file')
+    deploy_parser.add_argument('--dry-run', required=False,
+                               action='store_true', dest='dry_run',
+                               help='Print actions without making any changes')
+    deploy_cat_group = deploy_parser.add_mutually_exclusive_group()
+    deploy_cat_group.add_argument(
+        '--include', required=False, metavar='CATEGORY_LIST',
+        type=args_validate_category_list, help=(
+            'CSV list of categories to include in the merge. Options: %s' %
+            ', '.join(CATEGORIES)))
+    deploy_cat_group.add_argument(
+        '--exclude', required=False, metavar='CATEGORY_LIST',
+        type=args_validate_category_list, help=(
+            'CSV list of categories to exclude in the merge. Options: %s' %
+            ', '.join(CATEGORIES)))
+
+
+def parse_merge_command(subparsers):
+    # Merge command arguments
+    merge_parser = subparsers.add_parser(
+        'merge', help='Merge a site onto another')
+    merge_parser.set_defaults(func=do_merge)
+    merge_parser.add_argument(
+        '--dest', '-d', metavar='SITE', dest='dst_site', required=True,
+        help='Site to merge onto (accepts wildcard pattern)')
+    merge_src_group = merge_parser.add_mutually_exclusive_group()
+    merge_src_group.add_argument('--src', '-s', metavar='SITE',
+                                 dest='src_site', help='Site to merge from')
+    merge_src_group.add_argument('--file', '-f', metavar='FILENAME',
+                                 dest='file_name',
+                                 help='Name of site file to merge from')
+    merge_parser.add_argument('--dry-run', required=False,
+                              action='store_true', dest='dry_run',
+                              help='Print actions without making any changes')
+    merge_cat_group = merge_parser.add_mutually_exclusive_group()
+    merge_cat_group.add_argument(
+        '--include', required=False, metavar='CATEGORY_LIST',
+        type=args_validate_category_list, help=(
+            'CSV list of categories to include in the merge. Options: %s' %
+            ', '.join(CATEGORIES)))
+    merge_cat_group.add_argument(
+        '--exclude', required=False, metavar='CATEGORY_LIST',
+        type=args_validate_category_list, help=(
+            'CSV list of categories to include in the merge. Options: %s' %
+            ', '.join(CATEGORIES)))
+    merge_parser.add_argument('--yes', '-y', action='store_true',
+                              help='Automatic yes to prompts')
+
+
+def get_args():
 
     # Top-level arguments
     parser = argparse.ArgumentParser(
@@ -132,119 +259,23 @@ def get_args():
                           help='Signal Sciences API token. If omitted will '
                                'try to use value in $SIGSCI_API_TOKEN')
 
-    # List command arguments
-    list_parser = subparsers.add_parser('list', help='List sites')
-    list_parser.set_defaults(func=do_list)
-    list_parser.add_argument('--filter', metavar='PATTERN', required=False,
-                             default='*',
-                             help='Filter site names using a wildcard pattern')
+    #List command
+    parse_list_command(subparsers)
 
     # Deploy command arguments
-    deploy_parser = subparsers.add_parser(
-        'deploy', help='Deploy a new site from a file')
-    deploy_parser.set_defaults(func=do_deploy)
-    deploy_parser.add_argument('--name', '-n', metavar='NAME', required=True,
-                               dest='site_name',
-                               help='Identifying name of the site')
-    deploy_parser.add_argument('--display-name', '-N',
-                               metavar='"Display Name"', dest='display_name',
-                               help='Display name of the site')
-    deploy_parser.add_argument('--file', '-f', metavar='FILENAME',
-                               required=True, dest='file_name',
-                               help='Name of site file')
-    deploy_parser.add_argument('--dry-run', required=False,
-                               action='store_true', dest='dry_run',
-                               help='Print actions without making any changes')
-    deploy_cat_group = deploy_parser.add_mutually_exclusive_group()
-    deploy_cat_group.add_argument(
-        '--include', required=False, metavar='CATEGORY_LIST',
-        type=_validate_category_list, help=(
-            'CSV list of categories to include in the merge. Options: %s' %
-            ', '.join(CATEGORIES)))
-    deploy_cat_group.add_argument(
-        '--exclude', required=False, metavar='CATEGORY_LIST',
-        type=_validate_category_list, help=(
-            'CSV list of categories to exclude in the merge. Options: %s' %
-            ', '.join(CATEGORIES)))
+    parse_deploy_command(subparsers)
 
     # Backup command arguments
-    backup_parser = subparsers.add_parser('backup',
-                                          help='Backup a site to a file')
-    backup_parser.set_defaults(func=do_backup)
-    backup_parser.add_argument('--name', '-n', metavar='NAME', required=True,
-                               dest='site_name', help='Site name')
-    backup_parser.add_argument('--out', '-o', metavar='FILENAME',
-                               required=True, dest='file_name',
-                               help='File to save backup to')
+    parse_backup_command(subparsers)
 
     # Clone command arguments
-    clone_parser = subparsers.add_parser(
-        'clone', help='Clone an existing site to a new site')
-    clone_parser.set_defaults(func=do_clone)
-    clone_parser.add_argument('--src', '-s', metavar='SITE', dest='src_site',
-                              required=True, help='Site to clone from')
-    clone_parser.add_argument('--dest', '-d', metavar='SITE', dest='dst_site',
-                              required=True, help='Site to clone to')
-    clone_parser.add_argument('--display-name', '-N',
-                              metavar='"Display Name"', dest='display_name',
-                              help='Display name of the new site')
-    clone_parser.add_argument('--dry-run', required=False,
-                              action='store_true', dest='dry_run',
-                              help='Print actions without making any changes')
-    clone_cat_group = clone_parser.add_mutually_exclusive_group()
-    clone_cat_group.add_argument(
-        '--include', required=False, metavar='CATEGORY_LIST',
-        type=_validate_category_list, help=(
-            'CSV list of categories to include in the merge. Options: %s' %
-            ', '.join(CATEGORIES)))
-    clone_cat_group.add_argument(
-        '--exclude', required=False, metavar='CATEGORY_LIST',
-        type=_validate_category_list, help=(
-            'CSV list of categories to include in the merge. Options: %s' %
-            ', '.join(CATEGORIES)))
+    parse_clone_command(subparsers)
 
     # Merge command arguments
-    merge_parser = subparsers.add_parser(
-        'merge', help='Merge a site onto another')
-    merge_parser.set_defaults(func=do_merge)
-    merge_parser.add_argument(
-        '--dest', '-d', metavar='SITE', dest='dst_site', required=True,
-        help='Site to merge onto (accepts wildcard pattern)')
-    merge_src_group = merge_parser.add_mutually_exclusive_group()
-    merge_src_group.add_argument('--src', '-s', metavar='SITE',
-                                 dest='src_site', help='Site to merge from')
-    merge_src_group.add_argument('--file', '-f', metavar='FILENAME',
-                                 dest='file_name',
-                                 help='Name of site file to merge from')
-    merge_parser.add_argument('--dry-run', required=False,
-                              action='store_true', dest='dry_run',
-                              help='Print actions without making any changes')
-    merge_cat_group = merge_parser.add_mutually_exclusive_group()
-    merge_cat_group.add_argument(
-        '--include', required=False, metavar='CATEGORY_LIST',
-        type=_validate_category_list, help=(
-            'CSV list of categories to include in the merge. Options: %s' %
-            ', '.join(CATEGORIES)))
-    merge_cat_group.add_argument(
-        '--exclude', required=False, metavar='CATEGORY_LIST',
-        type=_validate_category_list, help=(
-            'CSV list of categories to include in the merge. Options: %s' %
-            ', '.join(CATEGORIES)))
-    merge_parser.add_argument('--yes', '-y', action='store_true',
-                              help='Automatic yes to prompts')
+    parse_merge_command(subparsers)
 
     # Validate command arguments
-    validate_parser = subparsers.add_parser('validate',
-                                            help='Validate a site deployment')
-    validate_parser.set_defaults(func=do_validate)
-    validate_parser.add_argument('--name', '-n', metavar='NAME', required=True,
-                                 dest='site_name', help='Site name')
-    validate_parser.add_argument('--target', '-d', metavar='URL',
-                                 required=True, dest='target',
-                                 help='URL to test against')
-    validate_parser.add_argument(
-        '--dry-run', required=False, action='store_true', dest='dry_run',
-        help='Print actions without making any changes')
+    parse_validate_command(subparsers)
 
     # Return the parsed arguments
     return parser.parse_args()
