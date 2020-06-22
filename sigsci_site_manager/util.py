@@ -1,16 +1,23 @@
 from sigsci_site_manager.consts import CATEGORIES
 
 
-def filter_data(data, keys):
+def filter_data(data, keys, optional_keys=[]):
     if isinstance(data, (list, tuple)):
         ret = []
         for item in data:
             # Only save the data required by the create API
-            ret.append({k: item[k] for k in keys})
+            r = {k: item[k] for k in keys}
+            for k in optional_keys:
+                if k in item:
+                    r[k] = item[k]
+            ret.append(r)
     elif data is None:
         ret = {}
     else:
         ret = {k: data[k] for k in keys}
+        for k in optional_keys:
+            if k in item:
+                ret[k] = item[k]
     return ret
 
 

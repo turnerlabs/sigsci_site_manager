@@ -38,6 +38,7 @@ def get_templated_rules(api):
     detection_keys = ['name', 'fields', 'enabled']
     alert_keys = ['longName', 'interval', 'threshold',
                   'skipNotifications', 'enabled', 'action']
+    optional_alert_keys = ['blockDurationSeconds']
     data = api.get_templated_rules()
     ret = {}
     for rule in data['data']:
@@ -51,7 +52,7 @@ def get_templated_rules(api):
         ret[rule['name']]['detectionAdds'] += filter_data(
             rule['detections'], detection_keys)
         ret[rule['name']]['alertAdds'] += filter_data(
-            rule['alerts'], alert_keys)
+            rule['alerts'], alert_keys, optional_keys=optional_alert_keys)
     return ret
 
 
