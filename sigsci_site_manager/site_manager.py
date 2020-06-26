@@ -11,6 +11,8 @@ from sigsci_site_manager.deploy import deploy
 from sigsci_site_manager.merge import merge
 from sigsci_site_manager.util import build_category_list
 from sigsci_site_manager.validate import validate
+from sigsci_site_manager.user import do_add_user, do_remove_user
+from sigsci_site_manager.user import do_list_membership, do_list_users
 from sigsci_site_manager.__version__ import __version__
 
 
@@ -234,6 +236,86 @@ def parse_merge_command(subparsers):
     merge_parser.add_argument('--yes', '-y', action='store_true',
                               help='Automatic yes to prompts')
 
+def parse_user_command(subparsers):
+    # Users command arguments
+    user_parser = subparsers.add_parser('user', help='Manage users')
+    user_parser.set_defaults(func=do_list_users)
+    user_parser.add_argument('--site', '-s', metavar='SITE',
+                             required=False,
+                             dest='site_name',
+                             help='Name of site')
+    user_parser.add_argument('--dry-run', action='store_true',
+                             required=False,
+                             dest='dry_run',
+                             help='Print actions without making any changes')
+
+    user_sub_parser = user_parser.add_subparsers(title="Manage User Command",
+                                                 dest="user_command")
+    # add user subcommand
+    user_add_sub_parser = user_sub_parser.add_parser('add',
+                                                     help='Add user to corp, or to site if ' +
+                                                     'site is specified')
+    user_add_sub_parser.set_defaults(func=do_add_user)
+    add_user_group = user_add_sub_parser.add_argument_group('add user')
+    add_mx_user_group = user_add_sub_parser.add_mutually_exclusive_group()
+    add_mx_user_group.add_argument('--id', '-i',
+                                   required=False,
+                                   dest='email_id',
+                                   help='User to add to site')
+    add_mx_user_group.add_argument('--file', '-f',
+                                   required=False,
+                                   dest='file_name', metavar='FILENAME',
+                                   help='Path to file containing, email_id,role pair one per line.' +
+                                   'Adds each user to site if site is specified, ' +
+                                   ' otherwise adds user from the corp org.' +
+                                   'Use - to read input from stdin')
+    add_user_group.add_argument('--role', '-r',
+                                required=False,
+                                choices=['admin', 'user', 'observer', 'owner'],
+                                dest='role_name',
+                                help='Role to assign user in site. Default role is observer')
+    add_user_group.add_argument('--api-user', '-a',
+                                required=False,
+                                action='store_true', dest='api_user',
+                                help='Enable as api user.' +
+                                'Enables user for api access')
+
+    # list user subcommand
+    user_list_sub_parser = user_sub_parser.add_parser('list',
+                                                      help='List users in corp, or in site if ' +
+                                                      'site is specified')
+    user_list_sub_parser.set_defaults(func=do_list_users)
+
+    # user membership subcommand
+    user_member_sub_parser = user_sub_parser.add_parser('member',
+                                                        help='list user site/role membership')
+    user_member_sub_parser.set_defaults(func=do_list_membership)
+    member_user_group = user_member_sub_parser.add_argument_group(
+        'list user site/role membership')
+    member_user_group.add_argument('--id', '-i',
+                                   required=True,
+                                   dest='email_id',
+                                   help='Email id for the user to examine site/corp membership.')
+
+    # remove user subcommand
+    user_del_sub_parser = user_sub_parser.add_parser('remove',
+                                                     help='remove user from corp/site')
+    user_del_sub_parser.set_defaults(func=do_remove_user)
+    del_user_group = user_del_sub_parser.add_mutually_exclusive_group()
+    del_user_group.add_argument('--id', '-i',
+                                required=False,
+                                dest='email_id',
+                                help='Email id for the user to delete. ' +
+                                'Deletes user from site if site is specified, ' +
+                                ' otherwise deletes user from the system')
+    del_user_group.add_argument('--file', '-f',
+                                required=False,
+                                dest='file_name', metavar='FILENAME',
+                                help='Path to file containing, email_id one per line.' +
+                                'Deletes user from site if site is specified, ' +
+                                ' otherwise deletes user from the system.' +
+                                'Use - to read input from stdin')
+
 
 def get_args():
 
@@ -274,6 +356,9 @@ def get_args():
     # Merge command arguments
     parse_merge_command(subparsers)
 
+    # user command arguments
+    parse_user_command(subparsers)
+    
     # Validate command arguments
     parse_validate_command(subparsers)
 
