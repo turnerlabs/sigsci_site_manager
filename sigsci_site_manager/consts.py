@@ -19,3 +19,10 @@ CATEGORIES = [
     INTEGRATIONS,
     ADVANCED_RULES
 ]
+
+VALID_ROLES = [
+    'observer',
+    'user',
+    'admin',
+    'owner'
+]
