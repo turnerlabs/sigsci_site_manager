@@ -24,18 +24,22 @@ def do_list(args):
     for site in resp['data']:
         if fnmatch.fnmatch(site['name'], args.filter):
             # Only include sites that match the filter pattern
-            sites.append('%-8s %-35s %s' % ( site['agentLevel'], site['name'], site['displayName']))
+            sites.append('%-8s %-35s %s' %
+                         (site['agentLevel'], site['name'], site['displayName']))
     sites.sort()
-    print('%-8s %-43s %s'%(underline('AgentLevel'), underline('SiteName'), underline('Site-DisplayName')))
+    print('%-8s %-43s %s' % (underline('AgentLevel'),
+                             underline('SiteName'), underline('Site-DisplayName')))
     for name in sites:
         print('  %s' % name)
     print('(%d sites)' % len(sites))
 
+
 def underline(text):
-    chars=""
+    chars = ""
     for char in text:
-        chars +="%c\u0332" %(char)
+        chars += "%c\u0332" % (char)
     return chars
+
 
 def do_deploy(args):
     api = init_api(args.username, args.password, args.token, args.corp,
