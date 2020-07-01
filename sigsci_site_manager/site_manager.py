@@ -136,7 +136,7 @@ def args_validate_category_list(value: str):
 
 
 def parse_backup_command(subparsers):
-     # Backup command arguments
+    # Backup command arguments
     backup_parser = subparsers.add_parser('backup',
                                           help='Backup a site to a file')
     backup_parser.set_defaults(func=do_backup)
@@ -236,6 +236,7 @@ def parse_merge_command(subparsers):
     merge_parser.add_argument('--yes', '-y', action='store_true',
                               help='Automatic yes to prompts')
 
+
 def parse_user_command(subparsers):
     # Users command arguments
     user_parser = subparsers.add_parser('user', help='Manage users')
@@ -265,9 +266,9 @@ def parse_user_command(subparsers):
     add_mx_user_group.add_argument('--file', '-f',
                                    required=False,
                                    dest='file_name', metavar='FILENAME',
-                                   help='Path to file containing, email_id,role pair one per line.' +
+                                   help='Path to file containing email_id,role pair one per line. ' +
                                    'Adds each user to site if site is specified, ' +
-                                   ' otherwise adds user from the corp org.' +
+                                   'otherwise adds user from the corp org. ' +
                                    'Use - to read input from stdin')
     add_user_group.add_argument('--role', '-r',
                                 required=False,
@@ -277,7 +278,7 @@ def parse_user_command(subparsers):
     add_user_group.add_argument('--api-user', '-a',
                                 required=False,
                                 action='store_true', dest='api_user',
-                                help='Enable as api user.' +
+                                help='Enable as api user. ' +
                                 'Enables user for api access')
 
     # list user subcommand
@@ -307,13 +308,13 @@ def parse_user_command(subparsers):
                                 dest='email_id',
                                 help='Email id for the user to delete. ' +
                                 'Deletes user from site if site is specified, ' +
-                                ' otherwise deletes user from the system')
+                                'otherwise deletes user from the system')
     del_user_group.add_argument('--file', '-f',
                                 required=False,
                                 dest='file_name', metavar='FILENAME',
                                 help='Path to file containing, email_id one per line.' +
                                 'Deletes user from site if site is specified, ' +
-                                ' otherwise deletes user from the system.' +
+                                'otherwise deletes user from the system. ' +
                                 'Use - to read input from stdin')
 
 
@@ -341,7 +342,7 @@ def get_args():
                           help='Signal Sciences API token. If omitted will '
                                'try to use value in $SIGSCI_API_TOKEN')
 
-    #List command
+    # List command
     parse_list_command(subparsers)
 
     # Deploy command arguments
@@ -358,7 +359,7 @@ def get_args():
 
     # user command arguments
     parse_user_command(subparsers)
-    
+
     # Validate command arguments
     parse_validate_command(subparsers)
 

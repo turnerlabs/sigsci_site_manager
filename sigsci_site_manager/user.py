@@ -19,12 +19,11 @@ def do_list_users(args):
         line_entries = []
         if args.site_name:
             print('Site: %s' % args.site_name)
-            print(colFormat % (cols[0], 'site' + cols[1],
+            print(colFormat % (cols[0], 'site-' + cols[1],
                                cols[2], cols[3]))
             for user in users['data']:
                 line_entries.append(colFormat % (user['user'][cols[0]], user[cols[1]],
                                                  user['user'][cols[2]], user['user'][cols[3]]))
-            print_sorted_array(line_entries)
         else:
             print(colFormat % (cols[0], 'corp' + cols[1],
                                cols[2], cols[3]))
@@ -43,12 +42,13 @@ def do_list_membership(args):
         colFormat = "%10s %s"
         if memberships:
             line_entries = []
-            print(colFormat % (cols[0], cols[1]))
             for member in memberships['data']:
                 line_entries.append(colFormat % (member[cols[0]],
                                                  "%s [%s]" % (member[cols[1]]['displayName'],
                                                               member[cols[1]]['name'])))
-            print_sorted_array(line_entries)
+            if len(line_entries) > 0:
+                print(colFormat % (cols[0], cols[1]))
+                print_sorted_array(line_entries)
 
 
 def do_add_user(args):
@@ -61,40 +61,24 @@ def do_add_user(args):
         api.site = args.site_name
         location_string = args.site_name
 
+    user_list = []
     if args.email_id:
-        data = resolve_user_data_role(api, args.role_name)
+        user_list.append([args.email_id, args.role_name])
+    if input_file:
+        user_list = get_users_from_file(input_file, 2)
+
+    added_users = 0
+    for entry in user_list:
+        user_role = entry[1]
+        if args.role_name and len(entry[1]) >= 0:
+            user_role = args.role_name
+        data = resolve_user_data_role(api, user_role)
         if args.dry_run:
             print("Adding %s to %s with %s role" %
-                  (args.email_id, location_string, data['role']))
-        add_new_user(api, args.email_id, args.role_name, args.api_user)
-    if input_file:
-        add_users_from_file(input_file, api, args, location_string)
-
-
-def add_users_from_file(input_file, api, args, location_string):
-    entries = 0
-    with open_file_for_read(input_file) as f:
-        line = f.readline()
-        while line:
-            cols = line.split(",")
-            if len(cols) == 2:
-                if args.role_name:
-                    role = args.role_name
-                else:
-                    role = cols[1]
-                data = resolve_user_data_role(api, role)
-                args.role_name = cols[1]
-                args.email_id = cols[0]
-
-                if args.dry_run:
-                    print("Adding %s to %s with %s role" %
-                          (cols[0].strip(), location_string, data['role']))
-                add_new_user(api, args.email_id,
-                             args.role_name, args.api_user)
-
-                entries += 1
-            line = f.readline()
-    print("Processed %d entries" % entries)
+                  (entry[0], location_string, data['role']))
+        add_new_user(api, entry[0], data['role'], args.api_user)
+        added_users += 1
+    print("Added %d users" % added_users)
 
 
 def do_remove_user(args):
@@ -107,31 +91,27 @@ def do_remove_user(args):
         api.site = args.site_name
         location_string = args.site_name
 
+    user_list = []
     if args.email_id:
-        if args.dry_run:
-            print("Deleting %s from %s" % (args.email_id, location_string))
-        else:
-            if args.site_name:
-                api.delete_site_member(args.email_id)
-            else:
-                api.delete_corp_user(args.email_id)
+        user_list.append([args.email_id])
     if input_file:
-        entries = 0
-        with open_file_for_read(input_file) as f:
-            line = f.readline()
-            while line:
-                if args.dry_run:
-                    print("Deleting %s from %s" %
-                          (line.strip(), location_string))
-                else:
-                    if args.site_name:
-                        api.delete_site_member(line.strip())
-                    else:
-                        api.delete_corp_user(line.strip())
-                entries += 1
-                print(line)
-                line = f.readline()
-        print("Processed %d entries" % entries)
+        user_list = get_users_from_file(input_file, 1)
+
+    removed_users = 0
+    for entry in user_list:
+        if args.dry_run:
+            print("Removing %s from %s" %
+                  (entry[0], location_string))
+        remove_user(api, entry[0])
+        removed_users += 1
+    print("Removed %d users" % removed_users)
+
+
+def remove_user(api, email_id):
+    if api.site:
+        api.delete_site_member(email_id)
+    else:
+        api.delete_corp_user(email_id)
 
 
 def resolve_user_data_role(api, user_role):
@@ -144,6 +124,25 @@ def resolve_user_data_role(api, user_role):
         data['role'] = user_role
 
     return data
+
+
+def get_users_from_file(input_file, num_attrs):
+    # This may be memory bound for a large number of users
+    list_users = []
+    with open_file_for_read(input_file) as f:
+        line = f.readline()
+        while line:
+            cols = line.split(",")
+            num_cols = len(cols)
+            cur_cols = []
+            for i in range(0, num_attrs):
+                if i < num_cols:
+                    cur_cols.append(cols[i].strip())
+                else:
+                    cur_cols.append('')
+            list_users.append(cur_cols)
+            line = f.readline()
+    return list_users
 
 
 def resolve_input_file(file_arg):

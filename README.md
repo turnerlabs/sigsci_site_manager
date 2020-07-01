@@ -180,15 +180,15 @@ optional arguments:
   --id EMAIL_ID, -i EMAIL_ID
                         User to add to site
   --file FILENAME, -f FILENAME
-                        Path to file containing, email_id,role pair one per
-                        line.Adds each user to site if site is specified,
-                        otherwise adds user from the corp org.Use - to read
+                        Path to file containing email_id,role pair one per
+                        line. Adds each user to site if site is specified,
+                        otherwise adds user from the corp org. Use - to read
                         input from stdin
 
 add user:
   --role {admin,user,observer,owner}, -r {admin,user,observer,owner}
                         Role to assign user in site. Default role is observer
-  --api-user, -a        Enable as api user.Enables user for api access
+  --api-user, -a        Enable as api user. Enables user for api access
 ```
 
 ### User list Subcommand
@@ -227,7 +227,7 @@ optional arguments:
   --file FILENAME, -f FILENAME
                         Path to file containing, email_id one per line.Deletes
                         user from site if site is specified, otherwise deletes
-                        user from the system.Use - to read input from stdin
+                        user from the system. Use - to read input from stdin
 ```
 ### Validate Command
 ```shell
