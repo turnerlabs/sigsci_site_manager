@@ -11,6 +11,7 @@ from sigsci_site_manager.deploy import deploy
 from sigsci_site_manager.merge import merge
 from sigsci_site_manager.util import build_category_list
 from sigsci_site_manager.validate import validate
+from sigsci_site_manager.user import do_add_user, do_remove_user, do_list_membership, do_list_users
 from sigsci_site_manager.__version__ import __version__
 
 
@@ -110,15 +111,223 @@ def do_validate(args):
     validate(api, args.site_name, args.target, args.dry_run)
 
 
-def get_args():
+def setup_list_command_args(subparsers):
+    # List command arguments
+    list_parser = subparsers.add_parser('list', help='List sites')
+    list_parser.set_defaults(func=do_list)
+    list_parser.add_argument('--filter', metavar='PATTERN', required=False,
+                             default='*',
+                             help='Filter site names using a wildcard pattern')
 
-    def _validate_category_list(value: str):
-        value_list = value.upper().split(',')
-        for item in value_list:
-            if item not in CATEGORIES:
-                raise argparse.ArgumentTypeError(
-                    '%s is not a valid category %s' % (item, CATEGORIES))
-        return value_list
+
+def setup_validate_command_args(subparsers):
+    # Validate command arguments
+    validate_parser = subparsers.add_parser('validate',
+                                            help='Validate a site deployment')
+    validate_parser.set_defaults(func=do_validate)
+    validate_parser.add_argument('--name', '-n', metavar='NAME', required=True,
+                                 dest='site_name', help='Site name')
+    validate_parser.add_argument('--target', '-d', metavar='URL',
+                                 required=True, dest='target',
+                                 help='URL to test against')
+    validate_parser.add_argument(
+        '--dry-run', required=False, action='store_true', dest='dry_run',
+        help='Print actions without making any changes')
+
+
+def args_validate_category_list(value: str):
+    value_list = value.upper().split(',')
+    for item in value_list:
+        if item not in CATEGORIES:
+            raise argparse.ArgumentTypeError(
+                '%s is not a valid category %s' % (item, CATEGORIES))
+    return value_list
+
+
+def setup_backup_command_args(subparsers):
+    # Backup command arguments
+    backup_parser = subparsers.add_parser('backup',
+                                          help='Backup a site to a file')
+    backup_parser.set_defaults(func=do_backup)
+    backup_parser.add_argument('--name', '-n', metavar='NAME', required=True,
+                               dest='site_name', help='Site name')
+    backup_parser.add_argument('--out', '-o', metavar='FILENAME',
+                               required=True, dest='file_name',
+                               help='File to save backup to')
+
+
+def setup_clone_command_args(subparsers):
+    # Clone command arguments
+    clone_parser = subparsers.add_parser(
+        'clone', help='Clone an existing site to a new site')
+    clone_parser.set_defaults(func=do_clone)
+    clone_parser.add_argument('--src', '-s', metavar='SITE', dest='src_site',
+                              required=True, help='Site to clone from')
+    clone_parser.add_argument('--dest', '-d', metavar='SITE', dest='dst_site',
+                              required=True, help='Site to clone to')
+    clone_parser.add_argument('--display-name', '-N',
+                              metavar='"Display Name"', dest='display_name',
+                              help='Display name of the new site')
+    clone_parser.add_argument('--dry-run', required=False,
+                              action='store_true', dest='dry_run',
+                              help='Print actions without making any changes')
+    clone_cat_group = clone_parser.add_mutually_exclusive_group()
+    clone_cat_group.add_argument(
+        '--include', required=False, metavar='CATEGORY_LIST',
+        type=args_validate_category_list, help=(
+            'CSV list of categories to include in the merge. Options: %s' %
+            ', '.join(CATEGORIES)))
+    clone_cat_group.add_argument(
+        '--exclude', required=False, metavar='CATEGORY_LIST',
+        type=args_validate_category_list, help=(
+            'CSV list of categories to include in the merge. Options: %s' %
+            ', '.join(CATEGORIES)))
+
+
+def setup_deploy_command_args(subparsers):
+    # Deploy command arguments
+    deploy_parser = subparsers.add_parser(
+        'deploy', help='Deploy a new site from a file')
+    deploy_parser.set_defaults(func=do_deploy)
+    deploy_parser.add_argument('--name', '-n', metavar='NAME', required=True,
+                               dest='site_name',
+                               help='Identifying name of the site')
+    deploy_parser.add_argument('--display-name', '-N',
+                               metavar='"Display Name"', dest='display_name',
+                               help='Display name of the site')
+    deploy_parser.add_argument('--file', '-f', metavar='FILENAME',
+                               required=True, dest='file_name',
+                               help='Name of site file')
+    deploy_parser.add_argument('--dry-run', required=False,
+                               action='store_true', dest='dry_run',
+                               help='Print actions without making any changes')
+    deploy_cat_group = deploy_parser.add_mutually_exclusive_group()
+    deploy_cat_group.add_argument(
+        '--include', required=False, metavar='CATEGORY_LIST',
+        type=args_validate_category_list, help=(
+            'CSV list of categories to include in the merge. Options: %s' %
+            ', '.join(CATEGORIES)))
+    deploy_cat_group.add_argument(
+        '--exclude', required=False, metavar='CATEGORY_LIST',
+        type=args_validate_category_list, help=(
+            'CSV list of categories to exclude in the merge. Options: %s' %
+            ', '.join(CATEGORIES)))
+
+
+def setup_merge_command_args(subparsers):
+    # Merge command arguments
+    merge_parser = subparsers.add_parser(
+        'merge', help='Merge a site onto another')
+    merge_parser.set_defaults(func=do_merge)
+    merge_parser.add_argument(
+        '--dest', '-d', metavar='SITE', dest='dst_site', required=True,
+        help='Site to merge onto (accepts wildcard pattern)')
+    merge_src_group = merge_parser.add_mutually_exclusive_group()
+    merge_src_group.add_argument('--src', '-s', metavar='SITE',
+                                 dest='src_site', help='Site to merge from')
+    merge_src_group.add_argument('--file', '-f', metavar='FILENAME',
+                                 dest='file_name',
+                                 help='Name of site file to merge from')
+    merge_parser.add_argument('--dry-run', required=False,
+                              action='store_true', dest='dry_run',
+                              help='Print actions without making any changes')
+    merge_cat_group = merge_parser.add_mutually_exclusive_group()
+    merge_cat_group.add_argument(
+        '--include', required=False, metavar='CATEGORY_LIST',
+        type=args_validate_category_list, help=(
+            'CSV list of categories to include in the merge. Options: %s' %
+            ', '.join(CATEGORIES)))
+    merge_cat_group.add_argument(
+        '--exclude', required=False, metavar='CATEGORY_LIST',
+        type=args_validate_category_list, help=(
+            'CSV list of categories to include in the merge. Options: %s' %
+            ', '.join(CATEGORIES)))
+    merge_parser.add_argument('--yes', '-y', action='store_true',
+                              help='Automatic yes to prompts')
+
+
+def setup_user_command_args(subparsers):
+    # Users command arguments
+    user_parser = subparsers.add_parser('user', help='Manage users')
+    user_parser.set_defaults(func=do_list_users)
+    user_parser.add_argument('--site', '-s', metavar='SITE',
+                             required=False,
+                             dest='site_name',
+                             help='Name of site')
+    user_parser.add_argument('--dry-run', action='store_true',
+                             required=False,
+                             dest='dry_run',
+                             help='Print actions without making any changes')
+
+    user_sub_parser = user_parser.add_subparsers(title="Manage User Command",
+                                                 dest="user_command")
+    # add user subcommand
+    user_add_sub_parser = user_sub_parser.add_parser('add',
+                                                     help='Add user to corp, or to site if '
+                                                     'site is specified')
+    user_add_sub_parser.set_defaults(func=do_add_user)
+    add_user_group = user_add_sub_parser.add_argument_group('add user')
+    add_mx_user_group = user_add_sub_parser.add_mutually_exclusive_group()
+    add_mx_user_group.add_argument('--id', '-i',
+                                   required=False,
+                                   dest='email_id',
+                                   help='User to add to site')
+    add_mx_user_group.add_argument('--file', '-f',
+                                   required=False,
+                                   dest='file_name', metavar='FILENAME',
+                                   help='Path to file containing email_id,role pair one per line. '
+                                   'Adds each user to site if site is specified, '
+                                   'otherwise adds user from the corp org. '
+                                   'Use - to read input from stdin')
+    add_user_group.add_argument('--role', '-r',
+                                required=False,
+                                choices=['admin', 'user', 'observer', 'owner'],
+                                dest='role_name',
+                                help='Role to assign user in site. Default role is observer')
+    add_user_group.add_argument('--api-user', '-a',
+                                required=False,
+                                action='store_true', dest='api_user',
+                                help='Enable as api user. '
+                                'Enables user for api access')
+
+    # list user subcommand
+    user_list_sub_parser = user_sub_parser.add_parser('list',
+                                                      help='List users in corp, or in site if '
+                                                      'site is specified')
+    user_list_sub_parser.set_defaults(func=do_list_users)
+
+    # user membership subcommand
+    user_member_sub_parser = user_sub_parser.add_parser('member',
+                                                        help='list user site/role membership')
+    user_member_sub_parser.set_defaults(func=do_list_membership)
+    member_user_group = user_member_sub_parser.add_argument_group(
+        'list user site/role membership')
+    member_user_group.add_argument('--id', '-i',
+                                   required=True,
+                                   dest='email_id',
+                                   help='Email id for the user to examine site/corp membership.')
+
+    # remove user subcommand
+    user_del_sub_parser = user_sub_parser.add_parser('remove',
+                                                     help='remove user from corp/site')
+    user_del_sub_parser.set_defaults(func=do_remove_user)
+    del_user_group = user_del_sub_parser.add_mutually_exclusive_group()
+    del_user_group.add_argument('--id', '-i',
+                                required=False,
+                                dest='email_id',
+                                help='Email id for the user to delete. '
+                                'Deletes user from site if site is specified, '
+                                'otherwise deletes user from the system')
+    del_user_group.add_argument('--file', '-f',
+                                required=False,
+                                dest='file_name', metavar='FILENAME',
+                                help='Path to file containing, email_id one per line.'
+                                'Deletes user from site if site is specified, '
+                                'otherwise deletes user from the system. '
+                                'Use - to read input from stdin')
+
+
+def get_args():
 
     # Top-level arguments
     parser = argparse.ArgumentParser(
@@ -142,119 +351,26 @@ def get_args():
                           help='Signal Sciences API token. If omitted will '
                                'try to use value in $SIGSCI_API_TOKEN')
 
-    # List command arguments
-    list_parser = subparsers.add_parser('list', help='List sites')
-    list_parser.set_defaults(func=do_list)
-    list_parser.add_argument('--filter', metavar='PATTERN', required=False,
-                             default='*',
-                             help='Filter site names using a wildcard pattern')
+    # List command
+    setup_list_command_args(subparsers)
 
     # Deploy command arguments
-    deploy_parser = subparsers.add_parser(
-        'deploy', help='Deploy a new site from a file')
-    deploy_parser.set_defaults(func=do_deploy)
-    deploy_parser.add_argument('--name', '-n', metavar='NAME', required=True,
-                               dest='site_name',
-                               help='Identifying name of the site')
-    deploy_parser.add_argument('--display-name', '-N',
-                               metavar='"Display Name"', dest='display_name',
-                               help='Display name of the site')
-    deploy_parser.add_argument('--file', '-f', metavar='FILENAME',
-                               required=True, dest='file_name',
-                               help='Name of site file')
-    deploy_parser.add_argument('--dry-run', required=False,
-                               action='store_true', dest='dry_run',
-                               help='Print actions without making any changes')
-    deploy_cat_group = deploy_parser.add_mutually_exclusive_group()
-    deploy_cat_group.add_argument(
-        '--include', required=False, metavar='CATEGORY_LIST',
-        type=_validate_category_list, help=(
-            'CSV list of categories to include in the merge. Options: %s' %
-            ', '.join(CATEGORIES)))
-    deploy_cat_group.add_argument(
-        '--exclude', required=False, metavar='CATEGORY_LIST',
-        type=_validate_category_list, help=(
-            'CSV list of categories to exclude in the merge. Options: %s' %
-            ', '.join(CATEGORIES)))
+    setup_deploy_command_args(subparsers)
 
     # Backup command arguments
-    backup_parser = subparsers.add_parser('backup',
-                                          help='Backup a site to a file')
-    backup_parser.set_defaults(func=do_backup)
-    backup_parser.add_argument('--name', '-n', metavar='NAME', required=True,
-                               dest='site_name', help='Site name')
-    backup_parser.add_argument('--out', '-o', metavar='FILENAME',
-                               required=True, dest='file_name',
-                               help='File to save backup to')
+    setup_backup_command_args(subparsers)
 
     # Clone command arguments
-    clone_parser = subparsers.add_parser(
-        'clone', help='Clone an existing site to a new site')
-    clone_parser.set_defaults(func=do_clone)
-    clone_parser.add_argument('--src', '-s', metavar='SITE', dest='src_site',
-                              required=True, help='Site to clone from')
-    clone_parser.add_argument('--dest', '-d', metavar='SITE', dest='dst_site',
-                              required=True, help='Site to clone to')
-    clone_parser.add_argument('--display-name', '-N',
-                              metavar='"Display Name"', dest='display_name',
-                              help='Display name of the new site')
-    clone_parser.add_argument('--dry-run', required=False,
-                              action='store_true', dest='dry_run',
-                              help='Print actions without making any changes')
-    clone_cat_group = clone_parser.add_mutually_exclusive_group()
-    clone_cat_group.add_argument(
-        '--include', required=False, metavar='CATEGORY_LIST',
-        type=_validate_category_list, help=(
-            'CSV list of categories to include in the merge. Options: %s' %
-            ', '.join(CATEGORIES)))
-    clone_cat_group.add_argument(
-        '--exclude', required=False, metavar='CATEGORY_LIST',
-        type=_validate_category_list, help=(
-            'CSV list of categories to include in the merge. Options: %s' %
-            ', '.join(CATEGORIES)))
+    setup_clone_command_args(subparsers)
 
     # Merge command arguments
-    merge_parser = subparsers.add_parser(
-        'merge', help='Merge a site onto another')
-    merge_parser.set_defaults(func=do_merge)
-    merge_parser.add_argument(
-        '--dest', '-d', metavar='SITE', dest='dst_site', required=True,
-        help='Site to merge onto (accepts wildcard pattern)')
-    merge_src_group = merge_parser.add_mutually_exclusive_group()
-    merge_src_group.add_argument('--src', '-s', metavar='SITE',
-                                 dest='src_site', help='Site to merge from')
-    merge_src_group.add_argument('--file', '-f', metavar='FILENAME',
-                                 dest='file_name',
-                                 help='Name of site file to merge from')
-    merge_parser.add_argument('--dry-run', required=False,
-                              action='store_true', dest='dry_run',
-                              help='Print actions without making any changes')
-    merge_cat_group = merge_parser.add_mutually_exclusive_group()
-    merge_cat_group.add_argument(
-        '--include', required=False, metavar='CATEGORY_LIST',
-        type=_validate_category_list, help=(
-            'CSV list of categories to include in the merge. Options: %s' %
-            ', '.join(CATEGORIES)))
-    merge_cat_group.add_argument(
-        '--exclude', required=False, metavar='CATEGORY_LIST',
-        type=_validate_category_list, help=(
-            'CSV list of categories to include in the merge. Options: %s' %
-            ', '.join(CATEGORIES)))
-    merge_parser.add_argument('--yes', '-y', action='store_true',
-                              help='Automatic yes to prompts')
+    setup_merge_command_args(subparsers)
+
+    # user command arguments
+    setup_user_command_args(subparsers)
 
     # Validate command arguments
-    validate_parser = subparsers.add_parser('validate',
-                                            help='Validate a site deployment')
-    validate_parser.set_defaults(func=do_validate)
-    validate_parser.add_argument('--name', '-n', metavar='NAME', required=True,
-                                 dest='site_name', help='Site name')
-    validate_parser.add_argument('--target', '-d', metavar='URL',
-                                 required=True, dest='target',
-                                 help='URL to test against')
-    validate_parser.add_argument(
-        '--dry-run', required=False, action='store_true', dest='dry_run',
-        help='Print actions without making any changes')
+    setup_validate_command_args(subparsers)
 
     # Return the parsed arguments
     return parser.parse_args()

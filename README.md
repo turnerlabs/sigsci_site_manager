@@ -149,6 +149,86 @@ optional arguments:
   --yes, -y             Automatic yes to prompts
 ```
 
+### User Command
+```shell
+$ sigsci_site_manager user --help
+usage: sigsci_site_manager user [-h] [--site SITE] [--dry-run]
+                         {add,list,member,remove} ...
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --site SITE, -s SITE  Name of site
+  --dry-run             Print actions without making any changes
+
+Manage User Command:
+  {add,list,member,remove}
+    add                 Add user to corp, or to site if site is specified
+    list                List users in corp, or in site if site is specified
+    member              list user site/role membership
+    remove              remove user from corp/site
+```
+
+### User add SubCommand
+```shell
+$ sigsci_site_manager user add --help
+usage: sigsci_site_manager user add [-h] [--id EMAIL_ID | --file FILENAME]
+                             [--role {admin,user,observer,owner}] 
+                             [--override]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --id EMAIL_ID, -i EMAIL_ID
+                        User to add to site
+  --file FILENAME, -f FILENAME
+                        Path to file containing email_id,role pair one per
+                        line. Adds each user to site if site is specified,
+                        otherwise adds user from the corp org. Use - to read
+                        input from stdin
+
+add user:
+  --role {admin,user,observer,owner}, -r {admin,user,observer,owner}
+                        Role to assign user in site. Default role is observer
+  --api-user, -a        Enable as api user. Enables user for api access
+```
+
+### User list Subcommand
+```shell
+$ sigsci_site_manager user list --help
+usage: sigsci_site_manager user list [-h]
+
+optional arguments:
+  -h, --help  show this help message and exit
+```
+
+### User member Subcommand
+```shell
+$ sigsci_site_manager user member --help
+usage: sigsci_site_manager user member [-h] --id EMAIL_ID
+
+optional arguments:
+  -h, --help            show this help message and exit
+
+list user site/role membership:
+  --id EMAIL_ID, -i EMAIL_ID
+                        Email id for the user to examine site/corp membership.
+```
+
+### User remove Subcommand
+```shell
+$ sigsci_site_manager user remove  --help
+usage: sigsci_site_manager user remove [-h] [--id EMAIL_ID | --file FILENAME]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --id EMAIL_ID, -i EMAIL_ID
+                        Email id for the user to delete. Deletes user from
+                        site if site is specified, otherwise deletes user from
+                        the system
+  --file FILENAME, -f FILENAME
+                        Path to file containing, email_id one per line.Deletes
+                        user from site if site is specified, otherwise deletes
+                        user from the system. Use - to read input from stdin
+```
 ### Validate Command
 ```shell
 $ sigsci_site_manager validate --help

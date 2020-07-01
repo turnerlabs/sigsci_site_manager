@@ -1,4 +1,4 @@
-from sigsci_site_manager.consts import CATEGORIES
+from sigsci_site_manager.consts import CATEGORIES, VALID_ROLES
 
 
 def filter_data(data, keys, optional_keys=[]):
@@ -133,14 +133,22 @@ def build_category_list(include: list = None, exclude: list = None):
 
 
 def add_new_user(api, email, role, api_user):
+    """
+        This function is to accomodate changes to sigsci api. The features
+        need to be periodically reviewed incase sigsci backtracks on the
+        changes.
+        https://docs.signalsciences.net/whats-new/#changes-to-the-user-api
+        https://docs.signalsciences.net/whats-new/#updated-permissions-and-roles
+    """
+    # Validate roles
+    if role not in VALID_ROLES:
+        raise ValueError(
+            "Invalid role '{0}' passed to add_new_user".format(role))
+
+    user = None
     # Build the user data structure
-    corp_role = 'corpUser'
-    if role == 'observer':
-        corp_role = 'corpObserver'
-    elif role == 'admin':
-        corp_role = 'corpAdmin'
     data = {
-        'email': email,
+        'role': role,
         'memberships': {
             'data': [{
                 'site': {
@@ -148,13 +156,34 @@ def add_new_user(api, email, role, api_user):
                 }
             }]
         },
-        'role': corp_role,
         'apiUser': api_user
     }
+    add_user = False
+    update_user = False
+    try:
+        # Generic Exception will be thrown if user does not exist
+        user = api.get_corp_user(email)
+        memberships = api.get_memberships(email)
 
-    api.add_corp_user(email, data)
+        for membership in memberships['data']:
+            if role != membership['role']:
+                print('site:{0} changing role from {1} to {2}'.format(
+                    membership['site']['name'], membership['role'], role))
+            # copy the existing memberships
+            if membership['site']['name'].lower() != api.site.lower():
+                data['memberships']['data'].append(
+                    {'site': {'name': membership['site']['name']}})
+                update_user = True
 
-    if api_user:
-        # API users can't be added as API users directly so update
-        # after adding to enable API
+        if api_user:
+            # API users can't be added as API users directly so update
+            # after adding to enable API
+            update_user = True
+    except Exception as ex:
+        add_user = True
+    finally:
+        if add_user:
+            api.add_corp_user(email, data)
+    
+    if update_user:
         api.update_corp_user(email, data)
