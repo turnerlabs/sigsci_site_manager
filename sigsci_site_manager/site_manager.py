@@ -11,8 +11,7 @@ from sigsci_site_manager.deploy import deploy
 from sigsci_site_manager.merge import merge
 from sigsci_site_manager.util import build_category_list
 from sigsci_site_manager.validate import validate
-from sigsci_site_manager.user import do_add_user, do_remove_user
-from sigsci_site_manager.user import do_list_membership, do_list_users
+from sigsci_site_manager.user import do_add_user, do_remove_user, do_list_membership, do_list_users
 from sigsci_site_manager.__version__ import __version__
 
 
@@ -102,7 +101,7 @@ def do_validate(args):
     validate(api, args.site_name, args.target, args.dry_run)
 
 
-def parse_list_command(subparsers):
+def setup_list_command_args(subparsers):
     # List command arguments
     list_parser = subparsers.add_parser('list', help='List sites')
     list_parser.set_defaults(func=do_list)
@@ -111,7 +110,7 @@ def parse_list_command(subparsers):
                              help='Filter site names using a wildcard pattern')
 
 
-def parse_validate_command(subparsers):
+def setup_validate_command_args(subparsers):
     # Validate command arguments
     validate_parser = subparsers.add_parser('validate',
                                             help='Validate a site deployment')
@@ -135,7 +134,7 @@ def args_validate_category_list(value: str):
     return value_list
 
 
-def parse_backup_command(subparsers):
+def setup_backup_command_args(subparsers):
     # Backup command arguments
     backup_parser = subparsers.add_parser('backup',
                                           help='Backup a site to a file')
@@ -147,7 +146,7 @@ def parse_backup_command(subparsers):
                                help='File to save backup to')
 
 
-def parse_clone_command(subparsers):
+def setup_clone_command_args(subparsers):
     # Clone command arguments
     clone_parser = subparsers.add_parser(
         'clone', help='Clone an existing site to a new site')
@@ -175,7 +174,7 @@ def parse_clone_command(subparsers):
             ', '.join(CATEGORIES)))
 
 
-def parse_deploy_command(subparsers):
+def setup_deploy_command_args(subparsers):
     # Deploy command arguments
     deploy_parser = subparsers.add_parser(
         'deploy', help='Deploy a new site from a file')
@@ -205,7 +204,7 @@ def parse_deploy_command(subparsers):
             ', '.join(CATEGORIES)))
 
 
-def parse_merge_command(subparsers):
+def setup_merge_command_args(subparsers):
     # Merge command arguments
     merge_parser = subparsers.add_parser(
         'merge', help='Merge a site onto another')
@@ -237,7 +236,7 @@ def parse_merge_command(subparsers):
                               help='Automatic yes to prompts')
 
 
-def parse_user_command(subparsers):
+def setup_user_command_args(subparsers):
     # Users command arguments
     user_parser = subparsers.add_parser('user', help='Manage users')
     user_parser.set_defaults(func=do_list_users)
@@ -254,7 +253,7 @@ def parse_user_command(subparsers):
                                                  dest="user_command")
     # add user subcommand
     user_add_sub_parser = user_sub_parser.add_parser('add',
-                                                     help='Add user to corp, or to site if ' +
+                                                     help='Add user to corp, or to site if '
                                                      'site is specified')
     user_add_sub_parser.set_defaults(func=do_add_user)
     add_user_group = user_add_sub_parser.add_argument_group('add user')
@@ -266,9 +265,9 @@ def parse_user_command(subparsers):
     add_mx_user_group.add_argument('--file', '-f',
                                    required=False,
                                    dest='file_name', metavar='FILENAME',
-                                   help='Path to file containing email_id,role pair one per line. ' +
-                                   'Adds each user to site if site is specified, ' +
-                                   'otherwise adds user from the corp org. ' +
+                                   help='Path to file containing email_id,role pair one per line. '
+                                   'Adds each user to site if site is specified, '
+                                   'otherwise adds user from the corp org. '
                                    'Use - to read input from stdin')
     add_user_group.add_argument('--role', '-r',
                                 required=False,
@@ -278,12 +277,12 @@ def parse_user_command(subparsers):
     add_user_group.add_argument('--api-user', '-a',
                                 required=False,
                                 action='store_true', dest='api_user',
-                                help='Enable as api user. ' +
+                                help='Enable as api user. '
                                 'Enables user for api access')
 
     # list user subcommand
     user_list_sub_parser = user_sub_parser.add_parser('list',
-                                                      help='List users in corp, or in site if ' +
+                                                      help='List users in corp, or in site if '
                                                       'site is specified')
     user_list_sub_parser.set_defaults(func=do_list_users)
 
@@ -306,15 +305,15 @@ def parse_user_command(subparsers):
     del_user_group.add_argument('--id', '-i',
                                 required=False,
                                 dest='email_id',
-                                help='Email id for the user to delete. ' +
-                                'Deletes user from site if site is specified, ' +
+                                help='Email id for the user to delete. '
+                                'Deletes user from site if site is specified, '
                                 'otherwise deletes user from the system')
     del_user_group.add_argument('--file', '-f',
                                 required=False,
                                 dest='file_name', metavar='FILENAME',
-                                help='Path to file containing, email_id one per line.' +
-                                'Deletes user from site if site is specified, ' +
-                                'otherwise deletes user from the system. ' +
+                                help='Path to file containing, email_id one per line.'
+                                'Deletes user from site if site is specified, '
+                                'otherwise deletes user from the system. '
                                 'Use - to read input from stdin')
 
 
@@ -343,25 +342,25 @@ def get_args():
                                'try to use value in $SIGSCI_API_TOKEN')
 
     # List command
-    parse_list_command(subparsers)
+    setup_list_command_args(subparsers)
 
     # Deploy command arguments
-    parse_deploy_command(subparsers)
+    setup_deploy_command_args(subparsers)
 
     # Backup command arguments
-    parse_backup_command(subparsers)
+    setup_backup_command_args(subparsers)
 
     # Clone command arguments
-    parse_clone_command(subparsers)
+    setup_clone_command_args(subparsers)
 
     # Merge command arguments
-    parse_merge_command(subparsers)
+    setup_merge_command_args(subparsers)
 
     # user command arguments
-    parse_user_command(subparsers)
+    setup_user_command_args(subparsers)
 
     # Validate command arguments
-    parse_validate_command(subparsers)
+    setup_validate_command_args(subparsers)
 
     # Return the parsed arguments
     return parser.parse_args()
