@@ -99,10 +99,10 @@ def backups(api, site_name):
     data['site'] = get_site(api)
     data['rule_lists'] = get_rule_lists(api)
     #data['request_rules'] = get_request_rules(api) # add support for category exclusion if there are still sites that need legacy format
-    print('Using get_site_rules instead of get_request_rules rules...')
+    print('Using get_site_rules instead of get_request_rules and get_signal_rules...')
     data['site_rules'] = get_site_rules(api)
     data['custom_signals'] = get_custom_signals(api)
-    data['signal_rules'] = get_signal_rules(api)
+    #data['signal_rules'] = get_signal_rules(api)
     data['templated_rules'] = get_templated_rules(api)
     data['custom_alerts'] = get_custom_alerts(api)
     data['site_members'] = get_site_members(api)

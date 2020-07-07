@@ -370,9 +370,6 @@ def merges(api, site_name, data, categories):
     steps[CUSTOM_SIGNALS] = (
         merge_custom_signals, (api, data['custom_signals'])
     )
-    steps[SIGNAL_RULES] = (
-        merge_signal_rules, (api, data['signal_rules'])
-    )
     steps[TEMPLATED_RULES] = (
         merge_templated_rules, (api, data['templated_rules'])
     )
@@ -390,7 +387,7 @@ def merges(api, site_name, data, categories):
         (api, data['source'], data['advanced_rules'])
     )
 
-    # Determine if we have to use site_rules or request_rules (legacy) format
+    # Determine if we have to use site_rules or request_rules/signal_rules (legacy) format
     if 'site_rules' in data:
         steps[SITE_RULES] = (
             merge_site_rules, (api, data['site_rules'])
@@ -398,6 +395,9 @@ def merges(api, site_name, data, categories):
     else:
         steps[REQUEST_RULES] = (
             merge_request_rules, (api, data['request_rules'])
+        )
+        steps[SIGNAL_RULES] = (
+            merge_signal_rules, (api, data['signal_rules'])
         )
 
     for k in steps:
