@@ -127,6 +127,7 @@ def test_build_category_list():
         consts.RULE_LISTS,
         consts.CUSTOM_SIGNALS,
         consts.REQUEST_RULES,
+        consts.SITE_RULES,
         consts.SIGNAL_RULES,
         consts.TEMPLATED_RULES,
         consts.CUSTOM_ALERTS,
