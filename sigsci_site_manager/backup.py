@@ -22,6 +22,14 @@ def get_request_rules(api):
     return filter_data(data['data'], keys)
 
 
+def get_site_rules(api):
+    keys = ['type', 'enabled', 'groupOperator', 'conditions',
+            'actions', 'reason', 'expiration']
+    optional_alert_keys = ['signal']
+    data = api.get_site_rules()
+    return filter_data(data['data'], keys, optional_keys=optional_alert_keys)
+
+
 def get_custom_signals(api):
     keys = ['tagName', 'shortName', 'description']
     data = api.get_custom_signals()
@@ -90,7 +98,9 @@ def backups(api, site_name):
     data['source'] = {'corp': api.corp, 'site': api.site}
     data['site'] = get_site(api)
     data['rule_lists'] = get_rule_lists(api)
-    data['request_rules'] = get_request_rules(api)
+    #data['request_rules'] = get_request_rules(api) # add support for category exclusion if there are still sites that need legacy format
+    print('Using get_site_rules instead of get_request_rules rules...')
+    data['site_rules'] = get_site_rules(api)
     data['custom_signals'] = get_custom_signals(api)
     data['signal_rules'] = get_signal_rules(api)
     data['templated_rules'] = get_templated_rules(api)
