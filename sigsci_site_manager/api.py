@@ -34,6 +34,7 @@ def init_api(username, password, token, corp, dry_run=False):
         api.add_rule_lists = noop
         api.add_custom_signals = noop
         api.add_request_rules = noop
+        api.add_site_rules = noop
         api.add_signal_rules = noop
         api.add_templated_rules = noop
         api.add_custom_alert = noop

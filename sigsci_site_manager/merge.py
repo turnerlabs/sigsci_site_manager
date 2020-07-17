@@ -5,6 +5,7 @@ from sigsci_site_manager.backup import backups
 from sigsci_site_manager.consts import (RULE_LISTS,
                                         CUSTOM_SIGNALS,
                                         REQUEST_RULES,
+                                        SITE_RULES,
                                         SIGNAL_RULES,
                                         TEMPLATED_RULES,
                                         CUSTOM_ALERTS,
@@ -139,6 +140,29 @@ def merge_request_rules(api, data):
             print('  Adding %s' % item['reason'])
             try:
                 api.add_request_rules(item)
+            except Exception as e:  # pylint: disable=broad-except
+                print('    Failed: %s' % e)
+
+
+def merge_site_rules(api, data):
+    print('Merging site rules...')
+
+    # Get the existing site rules
+    keys = ['type', 'enabled', 'groupOperator', 'conditions',
+            'actions', 'reason', 'expiration']
+    optional_alert_keys = ['signal']
+    src = api.get_site_rules()
+    rules = filter_data(src['data'], keys, optional_keys=optional_alert_keys)
+
+    for item in data:
+        for rule in rules:
+            if equal_rules(rule, item):
+                print('  Skipping %s (exists)' % item['reason'])
+                break
+        else:
+            print('  Adding %s' % item['reason'])
+            try:
+                api.add_site_rules(item)
             except Exception as e:  # pylint: disable=broad-except
                 print('    Failed: %s' % e)
 
@@ -346,12 +370,6 @@ def merges(api, site_name, data, categories):
     steps[CUSTOM_SIGNALS] = (
         merge_custom_signals, (api, data['custom_signals'])
     )
-    steps[REQUEST_RULES] = (
-        merge_request_rules, (api, data['request_rules'])
-    )
-    steps[SIGNAL_RULES] = (
-        merge_signal_rules, (api, data['signal_rules'])
-    )
     steps[TEMPLATED_RULES] = (
         merge_templated_rules, (api, data['templated_rules'])
     )
@@ -368,6 +386,19 @@ def merges(api, site_name, data, categories):
         merge_advanced_rules,
         (api, data['source'], data['advanced_rules'])
     )
+
+    # Determine if we have to use site_rules or request_rules/signal_rules (legacy) format
+    if 'site_rules' in data:
+        steps[SITE_RULES] = (
+            merge_site_rules, (api, data['site_rules'])
+        )
+    else:
+        steps[REQUEST_RULES] = (
+            merge_request_rules, (api, data['request_rules'])
+        )
+        steps[SIGNAL_RULES] = (
+            merge_signal_rules, (api, data['signal_rules'])
+        )
 
     for k in steps:
         if categories and k in categories:

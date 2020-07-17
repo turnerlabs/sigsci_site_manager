@@ -4,6 +4,7 @@ import json
 from sigsci_site_manager.consts import (RULE_LISTS,
                                         CUSTOM_SIGNALS,
                                         REQUEST_RULES,
+                                        SITE_RULES,
                                         SIGNAL_RULES,
                                         TEMPLATED_RULES,
                                         CUSTOM_ALERTS,
@@ -47,6 +48,13 @@ def create_request_rules(api, data):
     for item in data:
         print('  %s' % item['reason'])
         api.add_request_rules(item)
+
+
+def create_site_rules(api, data):
+    print('Creating site rules...')
+    for item in data:
+        print('  %s' % item['reason'])
+        api.add_site_rules(item)
 
 
 def create_signal_rules(api, data):
@@ -157,12 +165,6 @@ def deploys(api, site_name, data, display_name, categories):
     steps[CUSTOM_SIGNALS] = (
         create_custom_signals, (api, data['custom_signals'])
     )
-    steps[REQUEST_RULES] = (
-        create_request_rules, (api, data['request_rules'])
-    )
-    steps[SIGNAL_RULES] = (
-        create_signal_rules, (api, data['signal_rules'])
-    )
     steps[TEMPLATED_RULES] = (
         update_templated_rules, (api, data['templated_rules'])
     )
@@ -180,6 +182,19 @@ def deploys(api, site_name, data, display_name, categories):
         (api, data['source'], data['advanced_rules'])
     )
 
+    # Determine if we have to use site_rules or request_rules/signal_rules (legacy) format
+    if 'site_rules' in data:
+        steps[SITE_RULES] = (
+            create_site_rules, (api, data['site_rules'])
+        )
+    else:
+        steps[REQUEST_RULES] = (
+            create_request_rules, (api, data['request_rules'])
+        )
+        steps[SIGNAL_RULES] = (
+            create_signal_rules, (api, data['signal_rules'])
+        )
+        
     for k in steps:
         if categories and k in categories:
             steps[k][0](*steps[k][1])
