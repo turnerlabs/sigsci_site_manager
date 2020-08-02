@@ -1,7 +1,7 @@
 import sys
 
 from sigsci_site_manager.api import init_api
-from sigsci_site_manager.util import add_new_user
+from sigsci_site_manager.util import add_new_user, underline
 
 
 def do_list_users(args):
@@ -13,23 +13,30 @@ def do_list_users(args):
     else:
         users = api.get_corp_users()
 
-    cols = ['email', 'role', 'status', 'name']
-    colFormat = "%45s %10s %10s %30s"
+    cols = ['email', 'role', 'status', 'mfaEnabled', 'authStatus', 'name']
+    colFormat = "%45s %10s %10s %15s %15s %30s"
+    titleColFormat = "%50s %20s %15s %25s %25s %30s"
     if users:
         line_entries = []
         if args.site_name:
             print('Site: %s' % args.site_name)
-            print(colFormat % (cols[0], 'site-' + cols[1],
-                               cols[2], cols[3]))
+            print(titleColFormat % (underline(cols[0]), underline('site-' + cols[1]),
+                                    underline(cols[2]), underline(cols[3])),
+                                    underline(cols[4]), underline(cols[5]))
             for user in users['data']:
                 line_entries.append(colFormat % (user['user'][cols[0]], user[cols[1]],
-                                                 user['user'][cols[2]], user['user'][cols[3]]))
+                                                 user['user'][cols[2]],
+                                                 user['user'][cols[3]],
+                                                 user['user'][cols[4]],
+                                                 user['user'][cols[5]]))
         else:
-            print(colFormat % (cols[0], 'corp' + cols[1],
-                               cols[2], cols[3]))
+            print(titleColFormat % (underline(cols[0]), underline('corp-' + cols[1]),
+                                    underline(cols[2]), underline(cols[3]),
+                                    underline(cols[4]), underline(cols[5])))
             for user in users['data']:
                 line_entries.append(colFormat % (user[cols[0]], user[cols[1]],
-                                                 user[cols[2]], user[cols[3]]))
+                                                 user[cols[2]], user[cols[3]],
+                                                 user[cols[4]], user[cols[5]]))
         print_sorted_array(line_entries)
 
 

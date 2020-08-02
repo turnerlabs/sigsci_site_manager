@@ -21,6 +21,13 @@ def filter_data(data, keys, optional_keys=[]):
     return ret
 
 
+def underline(text):
+    chars = ""
+    for char in text:
+        chars += "%c\u0332" % (char)
+    return chars
+
+
 def _equal_single(a, b):
     # Single conditions have simple values
     for key in ['field', 'operator', 'value']:
@@ -184,6 +191,6 @@ def add_new_user(api, email, role, api_user):
     finally:
         if add_user:
             api.add_corp_user(email, data)
-    
+
     if update_user:
         api.update_corp_user(email, data)
