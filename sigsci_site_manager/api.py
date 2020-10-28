@@ -50,5 +50,6 @@ def init_api(username, password, token, corp, dry_run=False):
         api.add_members_to_site = noop
         api.delete_site_member = noop
         api.copy_advanced_rule = noop
+        api.delete_custom_alert = noop
 
     return api

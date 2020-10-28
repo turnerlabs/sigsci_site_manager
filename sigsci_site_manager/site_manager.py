@@ -9,6 +9,7 @@ from sigsci_site_manager.clone import clone
 from sigsci_site_manager.consts import CATEGORIES
 from sigsci_site_manager.deploy import deploy
 from sigsci_site_manager.merge import merge
+from sigsci_site_manager.restore import restore
 from sigsci_site_manager.util import build_category_list
 from sigsci_site_manager.validate import validate
 from sigsci_site_manager.user import do_add_user, do_remove_user, do_list_membership, do_list_users
@@ -103,6 +104,28 @@ def do_merge(args):
         for site in sites:
             merge(api, site, args.src_site, args.file_name,
                   build_category_list(args.include, args.exclude))
+
+def do_restore(args):
+    api = init_api(args.username, args.password, args.token, args.corp,
+                   args.dry_run)
+
+    # Get the current sites
+    resp = api.get_corp_sites()
+
+    # If site doesn't exist, print an error and return
+    if args.dst_site not in [x['name'] for x in resp['data']]:
+        print("No sites match '%s'" % args.dst_site)
+        return
+
+    # Get confirmation of restore action
+    print("WARNING: This will overwrite current site settings.")
+    str_input = 'Do you want to continue [y/N]? '
+    cont = input(str_input)
+
+    # If confirmed, merge with identified sites
+    if cont.lower() in ['y', 'yes']:
+        restore(api, args.dst_site, args.file_name,
+                build_category_list(args.include, args.exclude))
 
 
 def do_validate(args):
@@ -246,6 +269,35 @@ def setup_merge_command_args(subparsers):
                               help='Automatic yes to prompts')
 
 
+def setup_restore_command_args(subparsers):
+    # Restore command arguments
+    restore_parser = subparsers.add_parser(
+        'restore',
+        help='Restore a site from a backup, overwriting current settings.')
+    restore_parser.set_defaults(func=do_restore)
+    restore_parser.add_argument(
+        '--dest', '-d', metavar='SITE', dest='dst_site', required=True,
+        help='Site to restore to (accepts wildcard pattern)')
+    restore_parser.add_argument('--file', '-f', metavar='FILENAME',
+                                 dest='file_name',
+                                 help='Name of site file to restore from',
+                                 required=True)
+    restore_parser.add_argument('--dry-run', required=False,
+                              action='store_true', dest='dry_run',
+                              help='Print actions without making any changes')
+    restore_cat_group = restore_parser.add_mutually_exclusive_group()
+    restore_cat_group.add_argument(
+        '--include', required=False, metavar='CATEGORY_LIST',
+        type=args_validate_category_list, help=(
+            'CSV list of categories to include in the restore. Options: %s' %
+            ', '.join(CATEGORIES)))
+    restore_cat_group.add_argument(
+        '--exclude', required=False, metavar='CATEGORY_LIST',
+        type=args_validate_category_list, help=(
+            'CSV list of categories to include in the restore. Options: %s' %
+            ', '.join(CATEGORIES)))
+
+
 def setup_user_command_args(subparsers):
     # Users command arguments
     user_parser = subparsers.add_parser('user', help='Manage users')
@@ -365,6 +417,9 @@ def get_args():
 
     # Merge command arguments
     setup_merge_command_args(subparsers)
+
+    # Restore command arguments
+    setup_restore_command_args(subparsers)
 
     # user command arguments
     setup_user_command_args(subparsers)
