@@ -1,5 +1,6 @@
 import argparse
 import fnmatch
+import json
 from getpass import getpass
 from pprint import pprint
 import os
@@ -115,6 +116,15 @@ def do_validate(args):
 def do_audit(args):
     api = init_api(args.username, args.password, args.token, args.corp)
 
+    # Get the current sites
+    resp = api.get_corp_sites()
+
+    # Filter the sites based on the provided destination pattern
+    sites = []
+    for site in resp['data']:
+        if fnmatch.fnmatch(site['name'], args.site_name):
+            sites.append(site['name'])
+
     # If no baseline file exists and no baseline site is specified, print an
     # error and return. Otherwise, create/load baseline reference
     if args.baseline_site is None and not os.path.isfile('audit_baseline.json'):
@@ -137,15 +147,19 @@ def do_audit(args):
         with open('audit_baseline.json', 'w') as f:
             json.dump(baseline_ref, f)
 
-    # Run audit
-    audit_json = audit(api, args.site_name, baseline_ref)
+    # Run audits
+    audit_results = []
+    for site in sites:
+        audit_results.append({'site': site,
+                              'result': audit(api, site, baseline_ref)})
 
     # Save to output file if specified, otherwise print it
     if args.file_name:
         with open(args.file_name, 'w') as f:
-            json.dump(audit_json, f)
+            json.dump(audit_results, f)
     else:
-        pprint(audit_json)
+        for result in audit_results:
+            pprint(result)
 
 def setup_list_command_args(subparsers):
     # List command arguments

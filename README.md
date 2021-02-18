@@ -240,3 +240,19 @@ optional arguments:
   --target URL, -d URL  URL to test against
   --dry-run             Print actions without making any changes
   ```
+
+### Audit Command
+```shell
+$ sigsci_site_manager audit --help
+usage: sigsci_site_manager audit [-h] --name NAME [--baseline BASELINE]
+                                 [--save] [--out FILENAME]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --name NAME, -n NAME  Site to audit
+  --baseline BASELINE, -b BASELINE
+                        Name of baseline site
+  --save, -s            Save baseline to "audit_baseline.json"
+  --out FILENAME, -o FILENAME
+                        File to save .json report to
+```
