@@ -1,29 +1,17 @@
 import os
 import json
 import re
-from sigsci_site_manager import api
 
-if 'SIGSCI_EMAIL' in os.environ:
-    username = os.environ['SIGSCI_EMAIL']
-if 'SIGSCI_PASSWORD' in os.environ:
-    password = os.environ['SIGSCI_PASSWORD']
-if 'SIGSCI_API_TOKEN' in os.environ:
-    token = os.environ['SIGSCI_API_TOKEN']
-if 'SIGSCI_CORP' in os.environ:
-    corp = os.environ['SIGSCI_CORP']
-
-my_api = api.init_api(username, None, token, corp)
-
-def get_site_custom_alerts(site, active_only=False):
+def get_site_custom_alerts(api, site, active_only=False):
     alerts = []
-    my_api.site = site
-    for alert in my_api.get_custom_alerts()['data']:
+    api.site = site
+    for alert in api.get_custom_alerts()['data']:
         if alert['type'] == 'siteAlert':
             if (active_only and alert['enabled']) or (not active_only):
                 alerts.append(alert)
     return alerts
 
-def create_audit_dict(alerts):
+def create_audit_ref(alerts):
     ''' Create a baseline compliance reference. Any (x.y.z) values contained in
         an alert's longName value will be interpreted as indicating that alert
         confers compliance with the referenced section of the baseline.
@@ -40,11 +28,7 @@ def create_audit_dict(alerts):
                 audit_ref[alert['tagName']] = set([match[0]])
     return {x: tuple(audit_ref[x]) for x in audit_ref}
 
-def save_baseline_json(site):
-    with open('audit_baseline.json', 'w') as f:
-        json.dump(create_audit_dict(get_site_custom_alerts(site)), f)
-
-def audit_site(site, baseline=None):
+def audit(site, baseline_ref):
     compliance_ref = {'OTHER': []}
     if baseline is None:
         if os.path.isfile('audit_baseline.json'):

@@ -1,6 +1,7 @@
 import argparse
 import fnmatch
 from getpass import getpass
+from pprint import pprint
 import os
 
 from sigsci_site_manager.api import init_api
@@ -11,6 +12,7 @@ from sigsci_site_manager.deploy import deploy
 from sigsci_site_manager.merge import merge
 from sigsci_site_manager.util import build_category_list
 from sigsci_site_manager.validate import validate
+from sigsci_site_manager.audit import get_site_custom_alerts, create_audit_ref, audit
 from sigsci_site_manager.user import do_add_user, do_remove_user, do_list_membership, do_list_users
 from sigsci_site_manager.__version__ import __version__
 
@@ -110,6 +112,41 @@ def do_validate(args):
                    args.dry_run)
     validate(api, args.site_name, args.target, args.dry_run)
 
+def do_audit(args):
+    api = init_api(args.username, args.password, args.token, args.corp,
+                   args.dry_run)
+
+    # If no baseline file exists and no baseline site is specified, print an
+    # error and return. Otherwise, create/load baseline reference
+    if args.baseline is None and not os.path.isfile('audit_baseline.json'):
+        print("Must specify a baseline site.")
+        return
+
+    elif args.baseline is None:
+        baseline_ref = json.load(open('audit_baseline.json'))
+
+    else:
+        baseline_ref = create_audit_ref(
+            get_site_custom_alerts(args.baseline, active_only=True))
+
+    # If no baseline site is specified, but user passes save arg, warn that
+    # there is nothing to save
+    if args.baseline is None and args.save:
+        print("WARNING: No baseline site specified, nothing to save.")
+
+    elif args.save:
+        with open('audit_baseline.json', 'w') as f:
+            json.dump(baseline_ref, f)
+
+    # Run audit
+    audit_json = audit(api, args.site_name, baseline_ref)
+
+    # Save to output file if specified, otherwise print it
+    if args.file_name:
+        with open(args.file_name, 'w') as f:
+            json.dump(audit_json, f)
+    else:
+        pprint(audit_json)
 
 def setup_list_command_args(subparsers):
     # List command arguments
@@ -326,6 +363,24 @@ def setup_user_command_args(subparsers):
                                 'otherwise deletes user from the system. '
                                 'Use - to read input from stdin')
 
+def setup_audit_command_args(subparsers):
+    # Audit command arguments
+    audit_parser = subparsers.add_parser(
+        'audit',
+        help='Audit a site for compliance with a specified "baseline" site.')
+    audit_parser.set_defaults(func=do_audit)
+    audit_parser.add_argument(
+        '--name', '-n', metavar='NAME', dest='site_name', required=True,
+        help='Site to audit')
+    audit_parser.add_argument(
+        '--baseline', '-b', metavar='BASELINE', dest='baseline_site',
+        required=False, help='Name of baseline site')
+    audit_parser.add_argument('--save', '-s', metavar='SAVE',
+                               required=False, dest='save',
+                               help='Save baseline to "audit_baseline.json"')    
+    audit_parser.add_argument('--out', '-o', metavar='FILENAME',
+                               required=False, dest='file_name',
+                               help='File to save .json report to')
 
 def get_args():
 
@@ -371,6 +426,9 @@ def get_args():
 
     # Validate command arguments
     setup_validate_command_args(subparsers)
+
+    # Audit command arguments
+    setup_audit_command_args(subparsers)
 
     # Return the parsed arguments
     return parser.parse_args()
