@@ -113,25 +113,24 @@ def do_validate(args):
     validate(api, args.site_name, args.target, args.dry_run)
 
 def do_audit(args):
-    api = init_api(args.username, args.password, args.token, args.corp,
-                   args.dry_run)
+    api = init_api(args.username, args.password, args.token, args.corp)
 
     # If no baseline file exists and no baseline site is specified, print an
     # error and return. Otherwise, create/load baseline reference
-    if args.baseline is None and not os.path.isfile('audit_baseline.json'):
+    if args.baseline_site is None and not os.path.isfile('audit_baseline.json'):
         print("Must specify a baseline site.")
         return
 
-    elif args.baseline is None:
+    elif args.baseline_site is None:
         baseline_ref = json.load(open('audit_baseline.json'))
 
     else:
         baseline_ref = create_audit_ref(
-            get_site_custom_alerts(args.baseline, active_only=True))
+            get_site_custom_alerts(api, args.baseline_site, active_only=True))
 
     # If no baseline site is specified, but user passes save arg, warn that
     # there is nothing to save
-    if args.baseline is None and args.save:
+    if args.baseline_site is None and args.save:
         print("WARNING: No baseline site specified, nothing to save.")
 
     elif args.save:
@@ -375,9 +374,9 @@ def setup_audit_command_args(subparsers):
     audit_parser.add_argument(
         '--baseline', '-b', metavar='BASELINE', dest='baseline_site',
         required=False, help='Name of baseline site')
-    audit_parser.add_argument('--save', '-s', metavar='SAVE',
-                               required=False, dest='save',
-                               help='Save baseline to "audit_baseline.json"')    
+    audit_parser.add_argument('--save', '-s', required=False,
+                              action='store_true', dest='save',
+                              help='Save baseline to "audit_baseline.json"')    
     audit_parser.add_argument('--out', '-o', metavar='FILENAME',
                                required=False, dest='file_name',
                                help='File to save .json report to')

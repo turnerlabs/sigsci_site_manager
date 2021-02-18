@@ -2,7 +2,7 @@ import os
 import json
 import re
 
-def get_site_custom_alerts(api, site, active_only=False):
+def get_site_custom_alerts(api, site, active_only=True):
     alerts = []
     api.site = site
     for alert in api.get_custom_alerts()['data']:
@@ -28,19 +28,12 @@ def create_audit_ref(alerts):
                 audit_ref[alert['tagName']] = set([match[0]])
     return {x: tuple(audit_ref[x]) for x in audit_ref}
 
-def audit(site, baseline_ref):
+def audit(api, site, baseline):
     compliance_ref = {'OTHER': []}
-    if baseline is None:
-        if os.path.isfile('audit_baseline.json'):
-            baseline = json.load(open('audit_baseline.json'))
-        else:
-            raise Exception("A baseline is required.")
-    else:
-        baseline = create_audit_dict(get_site_custom_alerts(baseline))
     for sections in baseline.values():
         for section in sections:
             compliance_ref[section] = []
-    audit_site_alerts = get_site_custom_alerts(site)
+    audit_site_alerts = get_site_custom_alerts(api, site)
     for alert in audit_site_alerts:
         try:
             for section in baseline[alert['tagName']]:
