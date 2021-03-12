@@ -129,7 +129,7 @@ def setup_migrate_command_args(subparsers):
     # Migrate command arguments
     migrate_parser = subparsers.add_parser(
         'migrate', help='Migrate a site backup for use on a different corp')
-    migrate_parser.set_defaults(func=do_validate)
+    migrate_parser.set_defaults(func=do_migrate)
     migrate_parser.add_argument('--dest-corp', '-d', metavar='DESTCORP',
                                 required=True, dest='dest_corp',
                                 help='Destination corp to migrate to')
