@@ -108,13 +108,13 @@ def migrate(api, file_name, output_file, dest_corp, strip, keep_users):
         new_site['site_rules'] = []
     for site_rule in site_backup['site_rules']:
         dependencies = get_rule_dependencies(site_rule)
-        if dependencies and not strip:
+        if any(dependencies.values()) and not strip:
             for dependency_type in dependencies:
                 for dependency in dependencies[dependency_type]:
                     corp_dependencies[dependency_type].add(dependency)
             print("  Migrating '{}' with dependencies: {}".format(
                 site_rule['reason'], format_dependencies(dependencies)))
-        elif not dependencies:
+        elif not any(dependencies.values()):
             new_site['site_rules'].append(site_rule)
         else:
             print("  Skipping '{}' with dependencies: {}".format(
@@ -126,13 +126,13 @@ def migrate(api, file_name, output_file, dest_corp, strip, keep_users):
         new_site['advanced_rules'] = []
     for advanced_rule in site_backup['advanced_rules']:
         dependencies = get_advanced_rule_dependencies(advanced_rule)
-        if dependencies and not strip:
+        if any(dependencies.values()) and not strip:
             for dependency_type in dependencies:
                 for dependency in dependencies[dependency_type]:
                     corp_dependencies[dependency_type].add(dependency)
             print("  Migrating '{}' with dependencies: {}".format(
                 advanced_rule['shortName'], format_dependencies(dependencies)))
-        elif not dependencies:
+        elif not any(dependencies.values()):
             new_site['advanced_rules'].append(advanced_rule)
         else:
             print("  Skipping '{}' with dependencies: {}".format(
