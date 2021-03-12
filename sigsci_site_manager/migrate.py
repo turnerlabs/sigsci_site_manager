@@ -80,6 +80,8 @@ def migrate(api, file_name, output_file, dest_corp, strip, keep_users):
         msg += " Stripping all items with corp-level dependencies."
     if keep_users:
         msg += " Preserving users."
+    else:
+        msg += " Stripping users."
     print(msg)
     
     # Drop users if param not set

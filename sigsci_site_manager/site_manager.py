@@ -140,7 +140,7 @@ def setup_migrate_command_args(subparsers):
                                 required=False, dest='output_file',
                                 help='File to save migrated backup to, defaults'
                                 ' to "migrated_<backup filename>"')
-    migrate_parser.add_argument('--strip', '-s', metavar='STRIP',
+    migrate_parser.add_argument('--strip', '-s', action='store_true',
                                 required=False, dest='strip',
                                 help='Strip all items with corp dependencies '
                                 'from the migrated backup')
