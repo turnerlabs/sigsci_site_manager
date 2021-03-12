@@ -240,3 +240,24 @@ optional arguments:
   --target URL, -d URL  URL to test against
   --dry-run             Print actions without making any changes
   ```
+### Migrate Command
+```shell
+$ sigsci_site_manager migrate --help
+usage: sigsci_site_manager migrate [-h] --dest-corp DESTCORP --file FILENAME
+                                   [--out OUTPUTFILE] [--strip STRIP]
+                                   [--migrate-users]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --dest-corp DESTCORP, -d DESTCORP
+                        Destination corp to migrate to
+  --file FILENAME, -f FILENAME
+                        Filename of to migrate
+  --out OUTPUTFILE, -o OUTPUTFILE
+                        File to save migrated backup to, defaults to
+                        "migrated_<backup filename>"
+  --strip STRIP, -s STRIP
+                        Strip all items with corp dependencies from the
+                        migrated backup
+  --migrate-users, -u   Preserve users in migrated backup
+  ```
