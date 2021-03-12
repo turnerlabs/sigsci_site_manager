@@ -45,15 +45,23 @@ def get_alert_dependencies(alert):
         return alert['tagName']
 
 def get_advanced_rule_dependencies(advanced_rule):
-    dependencies = []
+    dependencies = {'rule_list': set(), 'signal': set()}
     matches = re.findall('[^\#]"(matchers|lists)*/*(corp\..+?)[")\s]',
                    str(advanced_rule))
     for match in matches:
         if match[0] in ['matchers', 'lists']:
-            dependencies.append({'type': 'rule_list', 'value': match[1]})
+            dependencies['rule_list'].add(match[1])
         else:
-            dependencies.append({'type': 'signal', 'value': match[1]})
+            dependencies['signal'].add(match[1])
     return dependencies
+
+def format_dependencies(dependencies):
+    items = []
+    for item in dependencies:
+        if dependencies[item]:
+            items.append("'{}': {}".format(
+                item, ', '.join([str(x) for x in dependencies[item]])))
+    return "({})".format(', '.join(items))
 
 def migrate(api, file_name, output_file, dest_corp, strip, keep_users):
     site_backup = json.load(open(file_name))
@@ -79,16 +87,23 @@ def migrate(api, file_name, output_file, dest_corp, strip, keep_users):
         new_site['site_members'] = []
     
     # Copy custom_alerts handling any corp dependencies
+    print("\nMigrating custom alerts...")
     if strip:
         new_site['custom_alerts'] = []
     for alert in site_backup['custom_alerts']:
         dependency = get_alert_dependencies(alert)
         if dependency and not strip:
             corp_dependencies['signal'].add(dependency)
+            print("  Migrating '{}' with corp signal dependency: {}".format(
+                alert['longName'], dependency))
         elif not dependency:
             new_site['custom_alerts'].append(alert)
+        else:
+            print("  Skipping '{}' with corp signal dependency: {}".format(
+                alert['longName'], dependency))
 
     # Copy site_rules handling any corp dependencies
+    print("\nMigrating site rules...")
     if strip:
         new_site['site_rules'] = []
     for site_rule in site_backup['site_rules']:
@@ -97,33 +112,51 @@ def migrate(api, file_name, output_file, dest_corp, strip, keep_users):
             for dependency_type in dependencies:
                 for dependency in dependencies[dependency_type]:
                     corp_dependencies[dependency_type].add(dependency)
+            print("  Migrating '{}' with dependencies: {}".format(
+                site_rule['reason'], format_dependencies(dependencies)))
         elif not dependencies:
             new_site['site_rules'].append(site_rule)
+        else:
+            print("  Skipping '{}' with dependencies: {}".format(
+                site_rule['reason'], format_dependencies(dependencies)))
 
     # Copy advanced_rules handling any corp dependencies
+    print("\nMigrating advanced rules...")
     if strip:
         new_site['advanced_rules'] = []
     for advanced_rule in site_backup['advanced_rules']:
         dependencies = get_advanced_rule_dependencies(advanced_rule)
         if dependencies and not strip:
-            for dependency in dependencies:
-                corp_dependencies[dependency['type']].add(dependency['value'])
+            for dependency_type in dependencies:
+                for dependency in dependencies[dependency_type]:
+                    corp_dependencies[dependency_type].add(dependency)
+            print("  Migrating '{}' with dependencies: {}".format(
+                advanced_rule['shortName'], format_dependencies(dependencies)))
         elif not dependencies:
             new_site['advanced_rules'].append(advanced_rule)
+        else:
+            print("  Skipping '{}' with dependencies: {}".format(
+                advanced_rule['shortName'], format_dependencies(dependencies)))
 
-    # Add corp_items to new backup, if necessary
+    # Add corp_items to new backup, if necessary    
     if any(corp_dependencies.values()):
+        print("\nAdding corp items to backup...")
         corp_items = get_corp_items(api)
-        new_site['corp_items'] = {x: [] for x in corp_dependencies if corp_dependencies[x]}
+        new_site['corp_items'] = {x: [] for x in corp_dependencies 
+            if corp_dependencies[x]}
         for dependency_type in corp_dependencies:
             new_site['corp_items'][dependency_type] = []
-            for dependency in set(corp_dependencies[dependency_type]):
+            for dependency in corp_dependencies[dependency_type]:
                 try:
-                    new_site['corp_items'][dependency_type].append(corp_items[dependency_type][dependency])
+                    new_site['corp_items'][dependency_type].append(
+                        corp_items[dependency_type][dependency])
+                    print("  {}/{}".format(dependency_type, dependency))
                 except KeyError:
-                    print("Existing broken dependency: {} > {}".format(dependency_type, dependency))
+                    print("  Existing broken dependency: {} > {}".format(
+                        dependency_type, dependency))
 
     if output_file is None:
-        "migrated_{}".format(file_name)
+        output_file = "migrated_{}".format(file_name)
+    print("\nWriting {}...".format(output_file))
     with open(output_file, 'w') as f:
         json.dump(new_site, f)
