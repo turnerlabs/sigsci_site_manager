@@ -138,8 +138,10 @@ def create_advanced_rules(api, source, data):
 
 def create_corp_signals(api, data):
     print("Creating corp signals...")
-    current_corp_signals = [x['tagName'] for x in 
-        api.get_corp_signals()['data']]
+    corp_signals = api.get_corp_signals()
+    current_corp_signals = []
+    if 'data' in corp_signals:
+        current_corp_signals = [x['tagName'] for x in corp_signals['data']]
     for signal in data:
         if signal['tagName'] in current_corp_signals:
             print("  corp signal {} exists, skipping".format(signal['tagName']))
@@ -150,8 +152,10 @@ def create_corp_signals(api, data):
 
 def create_corp_rule_lists(api, data):
     print("Creating corp rule lists...")
-    current_corp_rule_lists['rule_list'] = [x['id'] for x in 
-        api.get_corp_rule_lists()['data']]
+    corp_rule_lists = api.get_corp_rule_lists()
+    if 'data' in corp_rule_lists:
+        current_corp_rule_lists['rule_list'] = [x['id'] for x in
+            corp_rule_lists['data']]
     for rule_list in data:
         if rule_list['id'] in current_corp_rule_lists:
             print("  corp rule list {} exists, skipping".format(rule_list['id']))
