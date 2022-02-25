@@ -127,7 +127,7 @@ def merge_request_rules(api, data):
 
     # Get the existing request rules
     keys = ['enabled', 'groupOperator', 'conditions',
-            'action', 'signal', 'reason', 'expiration']
+            'action', 'actions', 'signal', 'reason', 'expiration']
     src = api.get_request_rules()
     rules = filter_data(src['data'], keys)
 
@@ -345,8 +345,6 @@ def merge_advanced_rules(api, source, data):
               (source['corp'], source['site'], api.corp, api.site))
         for item in not_copied:
             print('    %s (ID %s)' % (item['shortName'], item['id']))
-
-
 
 
 def merges(api, site_name, data, categories):
