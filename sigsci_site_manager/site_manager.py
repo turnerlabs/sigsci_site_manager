@@ -11,6 +11,7 @@ from sigsci_site_manager.deploy import deploy
 from sigsci_site_manager.merge import merge
 from sigsci_site_manager.util import build_category_list, underline
 from sigsci_site_manager.validate import validate
+from sigsci_site_manager.migrate import migrate
 from sigsci_site_manager.user import do_add_user, do_remove_user, do_list_membership, do_list_users
 from sigsci_site_manager.__version__ import __version__
 
@@ -103,6 +104,10 @@ def do_validate(args):
                    args.dry_run)
     validate(api, args.site_name, args.target, args.dry_run)
 
+def do_migrate(args):
+    api = init_api(args.username, args.password, args.token, args.corp)
+    migrate(api, args.file_name, args.output_file, args.dest_corp, args.strip,
+            args.keep_users)
 
 def setup_list_command_args(subparsers):
     # List command arguments
@@ -111,6 +116,30 @@ def setup_list_command_args(subparsers):
     list_parser.add_argument('--filter', metavar='PATTERN', required=False,
                              default='*',
                              help='Filter site names using a wildcard pattern')
+
+
+def setup_migrate_command_args(subparsers):
+    # Migrate command arguments
+    migrate_parser = subparsers.add_parser(
+        'migrate', help='Migrate a site backup for use on a different corp')
+    migrate_parser.set_defaults(func=do_migrate)
+    migrate_parser.add_argument('--dest-corp', '-d', metavar='DESTCORP',
+                                required=True, dest='dest_corp',
+                                help='Destination corp to migrate to')
+    migrate_parser.add_argument('--file', '-f', metavar='FILENAME',
+                                required=True, dest='file_name',
+                                help='Filename of to migrate')
+    migrate_parser.add_argument('--out', '-o', metavar='OUTPUTFILE',
+                                required=False, dest='output_file',
+                                help='File to save migrated backup to, defaults'
+                                ' to "migrated_<backup filename>"')
+    migrate_parser.add_argument('--strip', '-s', action='store_true',
+                                required=False, dest='strip',
+                                help='Strip all items with corp dependencies '
+                                'from the migrated backup')
+    migrate_parser.add_argument('--migrate-users', '-u', action='store_true',
+                                required=False, dest='keep_users',
+                                help='Preserve users in migrated backup')
 
 
 def setup_validate_command_args(subparsers):
@@ -364,6 +393,9 @@ def get_args():
 
     # Validate command arguments
     setup_validate_command_args(subparsers)
+
+    # Migrate command arguments
+    setup_migrate_command_args(subparsers)
 
     # Return the parsed arguments
     return parser.parse_args()

@@ -14,7 +14,7 @@ def filter_data(data, keys, optional_keys=[]):
     elif data is None:
         ret = {}
     else:
-        ret = {k: data[k] for k in keys}
+        ret = {k: data[k] for k in keys if k in data}
         for k in optional_keys:
             if k in item:
                 ret[k] = item[k]
@@ -98,15 +98,15 @@ def equal_rules(in_a, in_b, signal_rule=False):
         simple_fields = ['groupOperator', 'signal']
     else:
         # Request rules have an explicit action
-        keys = ['groupOperator', 'conditions', 'action', 'signal']
-        simple_fields = ['groupOperator', 'action', 'signal']
+        keys = ['groupOperator', 'conditions', 'action', 'actions', 'signal']
+        simple_fields = ['groupOperator', 'action', 'actions', 'signal']
 
     a = filter_data(in_a, keys)
     b = filter_data(in_b, keys)
 
     # Check the simple fields first
     for key in simple_fields:
-        if a[key] != b[key]:
+        if key in a and key in b and a[key] != b[key]:
             return False
 
     # Make sure there are the same number of conditions before doing anything

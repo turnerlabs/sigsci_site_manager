@@ -136,6 +136,32 @@ def create_advanced_rules(api, source, data):
         for item in not_copied:
             print('    %s (ID %s)' % (item['shortName'], item['id']))
 
+def create_corp_signals(api, data):
+    print("Creating corp signals...")
+    corp_signals = api.get_corp_signals()
+    current_corp_signals = []
+    if 'data' in corp_signals:
+        current_corp_signals = [x['tagName'] for x in corp_signals['data']]
+    for signal in data:
+        if signal['tagName'] in current_corp_signals:
+            print("  corp signal {} exists, skipping".format(signal['tagName']))
+        else:
+            api.add_corp_signals(signal)
+            print("  {}".format(signal['tagName']))
+
+
+def create_corp_rule_lists(api, data):
+    print("Creating corp rule lists...")
+    corp_rule_lists = api.get_corp_rule_lists()
+    if 'data' in corp_rule_lists:
+        current_corp_rule_lists['rule_list'] = [x['id'] for x in
+            corp_rule_lists['data']]
+    for rule_list in data:
+        if rule_list['id'] in current_corp_rule_lists:
+            print("  corp rule list {} exists, skipping".format(rule_list['id']))
+        else:
+            api.add_corp_rule_lists(rule_list)
+            print("  {}".format(rule_list['id']))
 
 def deploys(api, site_name, data, display_name, categories):
     # Check that the site doesn't already exist
@@ -157,6 +183,12 @@ def deploys(api, site_name, data, display_name, categories):
         return
 
     api.site = site_name
+
+    if 'corp_items' in data:
+        if 'rule_list' in data['corp_items']:
+            create_corp_rule_lists(data['corp_items']['rule_list'])
+        if 'signal' in data['corp_items']:
+            create_corp_signals(data['corp_items']['signal'])
 
     steps = OrderedDict()
     steps[RULE_LISTS] = (
