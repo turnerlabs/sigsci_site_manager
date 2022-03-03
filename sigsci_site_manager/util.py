@@ -21,6 +21,13 @@ def filter_data(data, keys, optional_keys=[]):
     return ret
 
 
+def underline(text):
+    chars = ""
+    for char in text:
+        chars += "%c\u0332" % (char)
+    return chars
+
+
 def _equal_single(a, b):
     # Single conditions have simple values
     for key in ['field', 'operator', 'value']:

@@ -9,7 +9,7 @@ from sigsci_site_manager.clone import clone
 from sigsci_site_manager.consts import CATEGORIES
 from sigsci_site_manager.deploy import deploy
 from sigsci_site_manager.merge import merge
-from sigsci_site_manager.util import build_category_list
+from sigsci_site_manager.util import build_category_list, underline
 from sigsci_site_manager.validate import validate
 from sigsci_site_manager.migrate import migrate
 from sigsci_site_manager.user import do_add_user, do_remove_user, do_list_membership, do_list_users
@@ -34,13 +34,6 @@ def do_list(args):
     for name in sites:
         print('  %s' % name)
     print('(%d sites)' % len(sites))
-
-
-def underline(text):
-    chars = ""
-    for char in text:
-        chars += "%c\u0332" % (char)
-    return chars
 
 
 def do_deploy(args):
